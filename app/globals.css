@@ -3,19 +3,20 @@
 @theme inline {
   --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
 
-  --color-background: #f8fafc;
-  --color-foreground: #0f172a;
+  --color-background: #f4f7fb;
+  --color-foreground: #0b1b3b;
   --color-card: #ffffff;
-  --color-card-foreground: #0f172a;
-  --color-muted: #f1f5f9;
-  --color-muted-foreground: #64748b;
-  --color-border: #e2e8f0;
-  --color-primary: #14bb51;
+  --color-card-foreground: #0b1b3b;
+  --color-muted: #eef2f9;
+  --color-muted-foreground: #5b6b86;
+  --color-border: #e4eaf3;
+  --color-primary: #2563eb;
   --color-primary-foreground: #ffffff;
-  --color-accent: #0ee912;
-  --color-ring: #14bb51;
+  --color-primary-dark: #1d4ed8;
+  --color-accent: #1e40af;
+  --color-ring: #2563eb;
 
-  --radius: 1rem;
+  --radius: 1.25rem;
 }
 
 * {
@@ -30,4 +31,13 @@ body {
   background-color: var(--color-background);
   color: var(--color-foreground);
   -webkit-font-smoothing: antialiased;
+}
+
+/* Hide scrollbar for horizontal carousels */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }

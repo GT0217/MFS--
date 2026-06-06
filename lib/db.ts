@@ -1,4 +1,8 @@
+import "server-only"
 import { Pool } from "pg"
+import { type App, type AppWithScore, type Insight, overallScore } from "./types"
+
+export * from "./types"
 
 let pool: Pool | undefined
 
@@ -9,34 +13,32 @@ export function getPool() {
   return pool
 }
 
-export type Ranking = {
-  id: number
-  name: string
-  category: string
-  score: number
-  note: string | null
-  created_at: string
-  updated_at: string
+function normalize(row: App): AppWithScore {
+  const app: App = {
+    ...row,
+    score_convenience: Number(row.score_convenience),
+    score_variety: Number(row.score_variety),
+    score_speed: Number(row.score_speed),
+    score_readability: Number(row.score_readability),
+    score_security: Number(row.score_security),
+    tags: Array.isArray(row.tags) ? row.tags : [],
+  }
+  return { ...app, overall: overallScore(app) }
 }
 
-export type Insight = {
-  id: number
-  title: string
-  body: string
-  tag: string | null
-  created_at: string
+export async function getApps(): Promise<AppWithScore[]> {
+  const { rows } = await getPool().query<App>("SELECT * FROM apps ORDER BY sort_order ASC, id ASC")
+  return rows.map(normalize)
 }
 
-export async function getRankings(): Promise<Ranking[]> {
-  const { rows } = await getPool().query<Ranking>(
-    "SELECT * FROM rankings ORDER BY score DESC, name ASC",
-  )
-  return rows
+export async function getApp(id: number): Promise<AppWithScore | null> {
+  const { rows } = await getPool().query<App>("SELECT * FROM apps WHERE id = $1", [id])
+  return rows[0] ? normalize(rows[0]) : null
 }
 
 export async function getInsights(): Promise<Insight[]> {
   const { rows } = await getPool().query<Insight>(
-    "SELECT * FROM insights ORDER BY created_at DESC",
+    "SELECT * FROM insights ORDER BY sort_order ASC, created_at DESC",
   )
   return rows
 }
