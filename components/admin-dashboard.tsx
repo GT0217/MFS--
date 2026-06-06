@@ -3,7 +3,7 @@
 import { useState } from "react"
 import Image from "next/image"
 import { CRITERIA, type AppWithScore, type Insight, type SiteSettings } from "@/lib/types"
-import { saveApp, deleteApp, saveInsight, deleteInsight, logout, saveSiteSettings } from "@/app/actions"
+import { saveApp, deleteApp, saveInsight, deleteInsight, saveSiteSettings } from "@/app/actions"
 
 const input =
   "rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-ring/30"
@@ -49,11 +49,6 @@ export function AdminDashboard({
             홈 화면
           </button>
         </div>
-        <form action={logout}>
-          <button className="rounded-lg border border-border bg-card px-3 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted">
-            로그아웃
-          </button>
-        </form>
       </div>
 
       {tab === "apps" ? (
