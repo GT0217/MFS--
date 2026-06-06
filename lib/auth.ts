@@ -26,7 +26,15 @@ export async function createSession() {
 
 export async function destroySession() {
   const store = await cookies()
-  store.delete(COOKIE_NAME)
+  // sameSite=none + secure 로 만든 쿠키는 삭제 시에도 동일 속성으로
+  // 즉시 만료시켜야 cross-site(iframe) 환경에서 브라우저가 실제로 지운다.
+  store.set(COOKIE_NAME, "", {
+    httpOnly: true,
+    sameSite: "none",
+    secure: true,
+    path: "/",
+    maxAge: 0,
+  })
 }
 
 export async function isAuthenticated(): Promise<boolean> {

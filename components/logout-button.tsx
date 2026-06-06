@@ -1,17 +1,16 @@
 "use client"
 
-export function LogoutButton() {
-  async function handleLogout() {
-    await fetch("/api/logout", { method: "POST", credentials: "include" })
-    window.location.href = "/admin"
-  }
+import { logout } from "@/app/actions"
 
+export function LogoutButton() {
   return (
-    <button
-      onClick={handleLogout}
-      className="rounded-lg bg-red-50 px-3 py-1.5 text-sm font-medium text-red-600 transition-colors hover:bg-red-100"
-    >
-      로그아웃
-    </button>
+    <form action={logout}>
+      <button
+        type="submit"
+        className="rounded-lg bg-red-50 px-3 py-1.5 text-sm font-medium text-red-600 transition-colors hover:bg-red-100"
+      >
+        로그아웃
+      </button>
+    </form>
   )
 }
