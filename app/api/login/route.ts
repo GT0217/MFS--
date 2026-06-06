@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server"
-import { cookies } from "next/headers"
 import { ADMIN_ID, ADMIN_PASSWORD } from "@/lib/auth"
 
 const COOKIE_NAME = "mfs_admin"
@@ -24,15 +23,11 @@ export async function POST(req: NextRequest) {
     )
   }
 
-  // next/headers cookies()로 직접 설정 — response.cookies와 달리 확실히 동작
-  const store = await cookies()
-  store.set(COOKIE_NAME, VALID_TOKEN, {
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-    path: "/",
-    maxAge: 60 * 60 * 24 * 30, // 30일
-  })
+  // next/headers 대신 Response에 직접 Set-Cookie 헤더를 추가합니다
+  const maxAge = 60 * 60 * 24 * 30
+  const cookieValue = `${COOKIE_NAME}=${VALID_TOKEN}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${maxAge}`
 
-  return NextResponse.json({ ok: true })
+  const response = NextResponse.json({ ok: true })
+  response.headers.set("Set-Cookie", cookieValue)
+  return response
 }
