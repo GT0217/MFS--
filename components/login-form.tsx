@@ -22,7 +22,8 @@ export function LoginForm() {
       })
       const data = await res.json().catch(() => ({}))
       if (res.ok && data.ok) {
-        window.location.href = "/admin"
+        // 캐시 우회: 타임스탬프 파라미터로 강제 새 요청
+        window.location.replace("/admin?_=" + Date.now())
       } else {
         setError(data.error || "로그인에 실패했습니다.")
       }
