@@ -94,7 +94,7 @@ export async function saveApp(formData: FormData) {
   const appStoreUrl = str(formData.get("app_store_url")) || null
   const raterCount = num(formData.get("rater_count"))
   const sortOrder = num(formData.get("sort_order"))
-  const tags = JSON.stringify(parseTags(formData.get("tags")))
+  const tags = parseTags(formData.get("tags"))
   const sc = num(formData.get("score_convenience"))
   const sv = num(formData.get("score_variety"))
   const ss = num(formData.get("score_speed"))
