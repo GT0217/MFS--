@@ -67,7 +67,7 @@ export async function login(_prev: unknown, formData: FormData) {
   const id = str(formData.get("id"))
   const password = str(formData.get("password"))
   if (!checkCredentials(id, password)) {
-    return { error: "아이디 또는 비밀번호가 올바르지 않습니다." }
+    return { error: "아이디 또는 비밀번호가 올바르지 않습니다.", success: false }
   }
   await createSession()
   redirect("/admin")
