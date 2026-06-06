@@ -1,7 +1,7 @@
 import Link from "next/link"
 import Image from "next/image"
 import { ArrowRight, TrendingUp, Sparkles, Users, Star } from "lucide-react"
-import { getApps, getInsights } from "@/lib/db"
+import { getApps, getInsights, getSiteSettings } from "@/lib/db"
 import { formatDate } from "@/lib/types"
 import { AppLogo } from "@/components/app-logo"
 
@@ -10,7 +10,7 @@ export const dynamic = "force-dynamic"
 const MEDALS = ["#facc15", "#cbd5e1", "#d4a373"]
 
 export default async function HomePage() {
-  const [apps, insights] = await Promise.all([getApps(), getInsights()])
+  const [apps, insights, settings] = await Promise.all([getApps(), getInsights(), getSiteSettings()])
   const ranked = [...apps].sort((a, b) => b.overall - a.overall)
   const top3 = ranked.slice(0, 3)
   const latestColumns = insights.filter((i) => i.type === "칼럼").slice(0, 2)
@@ -30,14 +30,15 @@ export default async function HomePage() {
             서경대학교 MFS 연구회
           </span>
           <h1 className="mt-4 text-balance text-[26px] font-bold leading-[1.3]">
-            대학생이 직접 써본
-            <br />
-            모바일 금융앱은
-            <br />
-            어땠을까?
+            {settings.hero_title.split("\n").map((line, i, arr) => (
+              <span key={i}>
+                {line}
+                {i < arr.length - 1 && <br />}
+              </span>
+            ))}
           </h1>
           <p className="mt-3 max-w-[16rem] text-pretty text-sm leading-relaxed text-white/85">
-            금융 동아리 MFS가 5가지 기준으로 솔직하게 평가한 핀테크·은행 앱 랭킹
+            {settings.hero_subtitle}
           </p>
         </div>
       </header>
@@ -171,14 +172,13 @@ export default async function HomePage() {
             </div>
           </div>
           <div className="p-5">
-            <h2 className="text-base font-bold">우리는 MFS 연구회입니다</h2>
+            <h2 className="text-base font-bold">{settings.club_intro_title}</h2>
             <p className="mt-2 text-pretty text-sm leading-relaxed text-muted-foreground">
-              Mobile Financial Service 연구회는 모바일 금융 서비스를 직접 사용하고 분석하는 서경대학교 금융
-              동아리입니다. 모든 평가는 멤버들이 실제로 앱을 써본 경험을 바탕으로 합니다.
+              {settings.club_intro_body}
             </p>
             <div className="mt-4 grid grid-cols-3 gap-2 text-center">
               <div className="rounded-xl bg-muted py-3">
-                <p className="text-lg font-bold text-primary">14</p>
+                <p className="text-lg font-bold text-primary">{settings.member_count}</p>
                 <p className="text-[11px] text-muted-foreground">활동 멤버</p>
               </div>
               <div className="rounded-xl bg-muted py-3">

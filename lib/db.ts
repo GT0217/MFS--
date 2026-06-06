@@ -1,6 +1,6 @@
 import "server-only"
 import { Pool } from "pg"
-import { type App, type AppWithScore, type Insight, overallScore } from "./types"
+import { type App, type AppWithScore, type Insight, type SiteSettings, DEFAULT_SITE_SETTINGS, overallScore } from "./types"
 
 export * from "./types"
 
@@ -26,6 +26,8 @@ function normalize(row: App): AppWithScore {
     score_readability: Number(row.score_readability),
     score_security: Number(row.score_security),
     tags: Array.isArray(row.tags) ? row.tags : [],
+    // criteria_count 컬럼이 DB에 없는 경우를 대비해 기본값 주입
+    criteria_count: Number(row.criteria_count) || 5,
   }
   return { ...app, overall: overallScore(app) }
 }
@@ -45,4 +47,15 @@ export async function getInsights(): Promise<Insight[]> {
     "SELECT * FROM insights ORDER BY sort_order ASC, created_at DESC",
   )
   return rows
+}
+
+export async function getSiteSettings(): Promise<SiteSettings> {
+  try {
+    const { rows } = await getPool().query<SiteSettings>(
+      "SELECT * FROM site_settings WHERE id = 1",
+    )
+    return rows[0] ?? DEFAULT_SITE_SETTINGS
+  } catch {
+    return DEFAULT_SITE_SETTINGS
+  }
 }

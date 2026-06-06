@@ -2,8 +2,8 @@
 
 import { useState } from "react"
 import Image from "next/image"
-import { CRITERIA, type AppWithScore, type Insight } from "@/lib/types"
-import { saveApp, deleteApp, saveInsight, deleteInsight, logout } from "@/app/actions"
+import { CRITERIA, type AppWithScore, type Insight, type SiteSettings } from "@/lib/types"
+import { saveApp, deleteApp, saveInsight, deleteInsight, logout, saveSiteSettings } from "@/app/actions"
 
 const input =
   "rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-ring/30"
@@ -12,19 +12,21 @@ const label = "text-xs font-semibold text-muted-foreground"
 export function AdminDashboard({
   apps,
   insights,
+  siteSettings,
 }: {
   apps: AppWithScore[]
   insights: Insight[]
+  siteSettings: SiteSettings
 }) {
-  const [tab, setTab] = useState<"apps" | "insights">("apps")
+  const [tab, setTab] = useState<"apps" | "insights" | "home">("apps")
 
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
-        <div className="inline-flex rounded-xl border border-border bg-card p-1">
+        <div className="inline-flex flex-wrap gap-1 rounded-xl border border-border bg-card p-1">
           <button
             onClick={() => setTab("apps")}
-            className={`rounded-lg px-4 py-1.5 text-sm font-semibold transition-colors ${
+            className={`rounded-lg px-3 py-1.5 text-sm font-semibold transition-colors ${
               tab === "apps" ? "bg-primary text-primary-foreground" : "text-muted-foreground"
             }`}
           >
@@ -32,11 +34,19 @@ export function AdminDashboard({
           </button>
           <button
             onClick={() => setTab("insights")}
-            className={`rounded-lg px-4 py-1.5 text-sm font-semibold transition-colors ${
+            className={`rounded-lg px-3 py-1.5 text-sm font-semibold transition-colors ${
               tab === "insights" ? "bg-primary text-primary-foreground" : "text-muted-foreground"
             }`}
           >
             인사이트 ({insights.length})
+          </button>
+          <button
+            onClick={() => setTab("home")}
+            className={`rounded-lg px-3 py-1.5 text-sm font-semibold transition-colors ${
+              tab === "home" ? "bg-primary text-primary-foreground" : "text-muted-foreground"
+            }`}
+          >
+            홈 화면
           </button>
         </div>
         <form action={logout}>
@@ -61,7 +71,7 @@ export function AdminDashboard({
             </Collapsible>
           ))}
         </div>
-      ) : (
+      ) : tab === "insights" ? (
         <div className="flex flex-col gap-4">
           <Collapsible title="새 인사이트 추가" accent>
             <InsightForm />
@@ -72,6 +82,8 @@ export function AdminDashboard({
             </Collapsible>
           ))}
         </div>
+      ) : (
+        <HomeSettingsForm settings={siteSettings} />
       )}
     </div>
   )
@@ -179,6 +191,15 @@ function AppForm({ app }: { app?: AppWithScore }) {
         <Field text="동아리 코멘트">
           <textarea name="club_comment" defaultValue={app?.club_comment ?? ""} rows={2} className={input} />
         </Field>
+        <Field text="앱 스토어 URL (다운로드 링크)">
+          <input
+            name="app_store_url"
+            type="url"
+            defaultValue={app?.app_store_url ?? ""}
+            placeholder="https://apps.apple.com/..."
+            className={input}
+          />
+        </Field>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <Field text="태그 (쉼표로 구분)">
             <input name="tags" defaultValue={(app?.tags ?? []).join(", ")} placeholder="1초 송금, 다크 모드" className={input} />
@@ -257,8 +278,8 @@ function InsightForm({ insight }: { insight?: Insight }) {
         <Field text="요약">
           <input name="summary" defaultValue={insight?.summary ?? ""} className={input} />
         </Field>
-        <Field text="본문">
-          <textarea name="body" defaultValue={insight?.body ?? ""} rows={4} className={input} />
+        <Field text="본문 (전문 내용 — 줄바꿈 지원)">
+          <textarea name="body" defaultValue={insight?.body ?? ""} rows={8} className={input} />
         </Field>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field text="작성자">
@@ -287,6 +308,78 @@ function InsightForm({ insight }: { insight?: Insight }) {
         {insight ? (
           <DeleteButton action={deleteInsight} id={insight.id} confirmText={`'${insight.title}'을(를) 삭제할까요?`} />
         ) : null}
+      </div>
+    </div>
+  )
+}
+
+function HomeSettingsForm({ settings }: { settings: SiteSettings }) {
+  return (
+    <div className="overflow-hidden rounded-2xl border border-primary/40 bg-card shadow-sm">
+      <div className="px-5 py-4">
+        <p className="font-bold text-primary">홈 화면 텍스트 설정</p>
+        <p className="text-xs text-muted-foreground">저장 후 즉시 홈 화면에 반영됩니다.</p>
+      </div>
+      <div className="border-t border-border px-5 py-5">
+        <form action={saveSiteSettings} className="flex flex-col gap-5">
+          <div className="rounded-xl bg-muted/50 p-4">
+            <p className="mb-3 text-xs font-semibold text-muted-foreground">히어로 섹션 (상단 배너)</p>
+            <div className="flex flex-col gap-4">
+              <Field text="메인 제목 (줄바꿈: Enter 키)">
+                <textarea
+                  name="hero_title"
+                  defaultValue={settings.hero_title}
+                  rows={3}
+                  className={input}
+                />
+              </Field>
+              <Field text="부제 (히어로 아래 설명 문구)">
+                <textarea
+                  name="hero_subtitle"
+                  defaultValue={settings.hero_subtitle}
+                  rows={2}
+                  className={input}
+                />
+              </Field>
+            </div>
+          </div>
+
+          <div className="rounded-xl bg-muted/50 p-4">
+            <p className="mb-3 text-xs font-semibold text-muted-foreground">동아리 소개 섹션 (하단 카드)</p>
+            <div className="flex flex-col gap-4">
+              <Field text="소개 제목">
+                <input
+                  name="club_intro_title"
+                  defaultValue={settings.club_intro_title}
+                  className={input}
+                />
+              </Field>
+              <Field text="소개 본문">
+                <textarea
+                  name="club_intro_body"
+                  defaultValue={settings.club_intro_body}
+                  rows={4}
+                  className={input}
+                />
+              </Field>
+              <Field text="활동 멤버 수">
+                <input
+                  name="member_count"
+                  type="number"
+                  defaultValue={settings.member_count}
+                  className={input}
+                />
+              </Field>
+            </div>
+          </div>
+
+          <button
+            type="submit"
+            className="self-start rounded-lg bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground transition-all hover:opacity-90 active:scale-95"
+          >
+            저장
+          </button>
+        </form>
       </div>
     </div>
   )
