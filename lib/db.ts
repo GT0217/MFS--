@@ -22,8 +22,6 @@ function normalize(row: App): AppWithScore {
     score_readability: Number(row.score_readability),
     score_security: Number(row.score_security),
     tags: Array.isArray(row.tags) ? row.tags : [],
-    // criteria_count 컬럼이 DB에 없는 경우를 대비해 기본값 주입
-    criteria_count: Number(row.criteria_count) || 5,
   }
   return { ...app, overall: overallScore(app) }
 }

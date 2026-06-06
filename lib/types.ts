@@ -8,7 +8,6 @@ export type App = {
   accent_color: string
   tags: string[]
   club_comment: string | null
-  app_store_url: string | null
   rater_count: number
   criteria_count: number
   score_convenience: number

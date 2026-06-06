@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { Sparkles, RotateCcw, ChevronRight, Share2, Check } from "lucide-react"
+import { Sparkles, RotateCcw, ChevronRight } from "lucide-react"
 import type { AppWithScore } from "@/lib/types"
 import { AppLogo } from "@/components/app-logo"
 
@@ -60,42 +60,6 @@ const FIELD_MAP: Record<keyof Weight, keyof AppWithScore> = {
   speed: "score_speed",
   readability: "score_readability",
   security: "score_security",
-}
-
-function ShareButton({ appName, matchPct }: { appName: string; matchPct: number }) {
-  const [copied, setCopied] = useState(false)
-
-  function handleShare() {
-    const text = `MFS가 나에게 추천한 금융앱은 "${appName}"! 매칭도 ${matchPct}%\n서경대 MFS 연구회 앱 추천 받아보기: ${window.location.href}`
-    if (navigator.share) {
-      navigator.share({ title: "MFS AI 추천 결과", text }).catch(() => null)
-    } else {
-      navigator.clipboard.writeText(text).then(() => {
-        setCopied(true)
-        setTimeout(() => setCopied(false), 2000)
-      })
-    }
-  }
-
-  return (
-    <button
-      type="button"
-      onClick={handleShare}
-      className="flex w-full items-center justify-center gap-2 rounded-2xl border border-border bg-card py-3.5 text-sm font-bold text-foreground transition-colors active:bg-muted"
-    >
-      {copied ? (
-        <>
-          <Check className="h-4 w-4 text-primary" aria-hidden="true" />
-          링크 복사됨
-        </>
-      ) : (
-        <>
-          <Share2 className="h-4 w-4" aria-hidden="true" />
-          결과 공유하기
-        </>
-      )}
-    </button>
-  )
 }
 
 export function RecommendQuiz({ apps }: { apps: AppWithScore[] }) {
@@ -164,7 +128,6 @@ export function RecommendQuiz({ apps }: { apps: AppWithScore[] }) {
 
     const best = scored[0]
     const runnerUps = scored.slice(1, 3)
-    const matchPct = Math.round((best.match / 10) * 100)
 
     return (
       <div>
@@ -182,7 +145,7 @@ export function RecommendQuiz({ apps }: { apps: AppWithScore[] }) {
           </div>
           <div className="mt-4 flex items-center gap-2">
             <span className="rounded-full bg-white/20 px-3 py-1 text-sm font-bold">
-              매칭도 {matchPct}%
+              매칭도 {Math.round((best.match / 10) * 100)}%
             </span>
             <Link
               href={`/ranking/${best.app.id}`}
@@ -215,47 +178,32 @@ export function RecommendQuiz({ apps }: { apps: AppWithScore[] }) {
           ))}
         </ul>
 
-        <div className="mt-6 flex flex-col gap-3">
-          <ShareButton appName={best.app.name} matchPct={matchPct} />
-          <button
-            type="button"
-            onClick={reset}
-            className="flex w-full items-center justify-center gap-2 rounded-2xl bg-muted py-3.5 text-sm font-bold text-muted-foreground"
-          >
-            <RotateCcw className="h-4 w-4" aria-hidden="true" />
-            다시 하기
-          </button>
-        </div>
+        <button
+          type="button"
+          onClick={reset}
+          className="mt-6 flex w-full items-center justify-center gap-2 rounded-2xl bg-muted py-3.5 text-sm font-bold text-muted-foreground"
+        >
+          <RotateCcw className="h-4 w-4" aria-hidden="true" />
+          다시 하기
+        </button>
       </div>
     )
   }
 
   const question = QUESTIONS[step]
-  const progress = ((step + 1) / QUESTIONS.length) * 100
 
   return (
     <div>
-      {/* Progress */}
-      <div className="mb-5">
-        <div className="mb-2 flex items-center justify-between">
-          <span className="text-xs font-semibold text-muted-foreground">
-            질문 {step + 1} / {QUESTIONS.length}
-          </span>
-          <span className="text-xs font-semibold text-primary">{Math.round(progress)}%</span>
+      <div className="mb-5 flex items-center gap-2">
+        <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted">
+          <div
+            className="h-full rounded-full bg-primary transition-all"
+            style={{ width: `${((step + 1) / QUESTIONS.length) * 100}%` }}
+          />
         </div>
-        <div className="flex gap-1.5">
-          {QUESTIONS.map((_, i) => (
-            <div
-              key={i}
-              className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted"
-            >
-              <div
-                className="h-full rounded-full bg-primary transition-all duration-500"
-                style={{ width: i < step + 1 ? "100%" : i === step ? "50%" : "0%" }}
-              />
-            </div>
-          ))}
-        </div>
+        <span className="text-xs font-semibold text-muted-foreground">
+          {step + 1}/{QUESTIONS.length}
+        </span>
       </div>
 
       <h2 className="text-balance text-lg font-bold leading-snug">{question.q}</h2>
@@ -266,7 +214,7 @@ export function RecommendQuiz({ apps }: { apps: AppWithScore[] }) {
             <button
               type="button"
               onClick={() => choose(opt.weight)}
-              className="flex w-full items-center justify-between rounded-2xl bg-card p-4 text-left text-sm font-semibold shadow-sm ring-1 ring-border transition-colors hover:ring-primary active:bg-muted"
+              className="flex w-full items-center justify-between rounded-2xl bg-card p-4 text-left text-sm font-semibold shadow-sm ring-1 ring-border transition-colors hover:ring-primary"
             >
               {opt.label}
               <ChevronRight className="h-4 w-4 text-muted-foreground" aria-hidden="true" />

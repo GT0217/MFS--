@@ -1,6 +1,6 @@
 import Link from "next/link"
 import { notFound } from "next/navigation"
-import { ChevronLeft, ExternalLink, Users } from "lucide-react"
+import { ChevronLeft } from "lucide-react"
 import { getApp, CRITERIA } from "@/lib/db"
 import { AppLogo } from "@/components/app-logo"
 import { ScoreRadar } from "@/components/score-radar"
@@ -15,10 +15,10 @@ export default async function AppDetailPage({ params }: { params: Promise<{ id: 
   const detailCriteria = CRITERIA.filter((c) => c.field !== "overall")
 
   return (
-    <div className="pb-8">
+    <div>
       {/* Header */}
       <header
-        className="px-5 pb-8 pt-12 text-white"
+        className="px-5 pb-7 pt-12 text-white"
         style={{ background: `linear-gradient(160deg, ${app.accent_color}, #0f9a42)` }}
       >
         <Link href="/ranking" className="inline-flex items-center gap-1 text-sm font-medium text-white/90">
@@ -42,40 +42,16 @@ export default async function AppDetailPage({ params }: { params: Promise<{ id: 
             ))}
           </div>
         )}
-        {/* App store link */}
-        {app.app_store_url && (
-          <a
-            href={app.app_store_url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-white/20 px-4 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-white/30"
-          >
-            <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
-            앱 다운로드
-          </a>
-        )}
       </header>
 
       {/* Stat card */}
       <section className="-mt-4 px-5">
         <div className="grid grid-cols-3 rounded-2xl bg-card py-4 shadow-sm ring-1 ring-border">
-          <Stat label="종합점수" value={app.overall.toFixed(1)} highlight />
-          <Stat label="평가자" value={`${app.rater_count}명`} divider />
-          <Stat label="평가 기준" value={`${app.criteria_count}가지`} />
+          <Stat label="종합" value={app.overall.toFixed(1)} highlight />
+          <Stat label="평가자" value={String(app.rater_count)} divider />
+          <Stat label="기준" value={String(app.criteria_count)} />
         </div>
       </section>
-
-      {/* Rater badge */}
-      {app.rater_count > 0 && (
-        <section className="px-5 pt-4">
-          <div className="flex items-center gap-2 rounded-xl bg-primary/5 px-4 py-2.5 ring-1 ring-primary/15">
-            <Users className="h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
-            <p className="text-xs text-muted-foreground">
-              <span className="font-bold text-primary">{app.rater_count}명</span>의 MFS 동아리원이 직접 사용하고 평가했습니다.
-            </p>
-          </div>
-        </section>
-      )}
 
       {/* Radar */}
       <section className="px-5 pt-6">

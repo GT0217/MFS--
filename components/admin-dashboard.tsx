@@ -179,15 +179,6 @@ function AppForm({ app }: { app?: AppWithScore }) {
         <Field text="동아리 코멘트">
           <textarea name="club_comment" defaultValue={app?.club_comment ?? ""} rows={2} className={input} />
         </Field>
-        <Field text="앱 스토어 URL (다운로드 링크)">
-          <input
-            name="app_store_url"
-            type="url"
-            defaultValue={app?.app_store_url ?? ""}
-            placeholder="https://apps.apple.com/..."
-            className={input}
-          />
-        </Field>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <Field text="태그 (쉼표로 구분)">
             <input name="tags" defaultValue={(app?.tags ?? []).join(", ")} placeholder="1초 송금, 다크 모드" className={input} />
@@ -266,8 +257,8 @@ function InsightForm({ insight }: { insight?: Insight }) {
         <Field text="요약">
           <input name="summary" defaultValue={insight?.summary ?? ""} className={input} />
         </Field>
-        <Field text="본문 (전문 내용 — 줄바꿈 지원)">
-          <textarea name="body" defaultValue={insight?.body ?? ""} rows={8} className={input} />
+        <Field text="본문">
+          <textarea name="body" defaultValue={insight?.body ?? ""} rows={4} className={input} />
         </Field>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field text="작성자">
