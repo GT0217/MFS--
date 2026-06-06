@@ -7,15 +7,8 @@ import {
   checkCredentials,
   createSession,
   destroySession,
-  isAuthenticated,
 } from "@/lib/auth"
 import { getPool } from "@/lib/db"
-
-async function requireAuth() {
-  if (!(await isAuthenticated())) {
-    throw new Error("Unauthorized")
-  }
-}
 
 function num(v: FormDataEntryValue | null, fallback = 0): number {
   const n = Number(v)
@@ -84,7 +77,6 @@ export async function logout() {
 /* ---------------- apps ---------------- */
 
 export async function saveApp(formData: FormData) {
-  await requireAuth()
   const id = num(formData.get("id"))
   const name = str(formData.get("name"))
   if (!name) return
@@ -157,7 +149,6 @@ export async function saveApp(formData: FormData) {
 }
 
 export async function deleteApp(formData: FormData) {
-  await requireAuth()
   const id = num(formData.get("id"))
   if (!id) return
   const prev = await getPool().query("SELECT logo_url FROM apps WHERE id = $1", [id])
@@ -169,7 +160,6 @@ export async function deleteApp(formData: FormData) {
 /* ---------------- insights ---------------- */
 
 export async function saveInsight(formData: FormData) {
-  await requireAuth()
   const id = num(formData.get("id"))
   const title = str(formData.get("title"))
   if (!title) return
@@ -219,7 +209,6 @@ export async function saveInsight(formData: FormData) {
 }
 
 export async function deleteInsight(formData: FormData) {
-  await requireAuth()
   const id = num(formData.get("id"))
   if (!id) return
   const prev = await getPool().query("SELECT image_url FROM insights WHERE id = $1", [id])
@@ -231,8 +220,6 @@ export async function deleteInsight(formData: FormData) {
 /* ---------------- site settings ---------------- */
 
 export async function saveSiteSettings(formData: FormData) {
-  await requireAuth()
-
   const heroTitle = str(formData.get("hero_title")) || "대학생이 직접 써본\n모바일 금융앱은\n어땠을까?"
   const heroSubtitle = str(formData.get("hero_subtitle")) || "금융 동아리 MFS가 5가지 기준으로 솔직하게 평가한 핀테크·은행 앱 랭킹"
   const clubIntroTitle = str(formData.get("club_intro_title")) || "우리는 MFS 연구회입니다"
