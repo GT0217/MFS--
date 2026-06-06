@@ -1,13 +1,12 @@
 import { Trophy } from "lucide-react"
-import { getApps } from "@/lib/db"
+import { getApps, getSiteSettings } from "@/lib/db"
 import { RankingBoard } from "@/components/ranking-board"
 import { PageHeader } from "@/components/page-header"
 
 export const dynamic = "force-dynamic"
 
 export default async function RankingPage() {
-  const apps = await getApps()
-  const raterCount = apps[0]?.rater_count ?? 0
+  const [apps, settings] = await Promise.all([getApps(), getSiteSettings()])
 
   return (
     <div>
@@ -15,7 +14,7 @@ export default async function RankingPage() {
         icon={Trophy}
         eyebrow="MFS RANKING"
         title="MFS 랭킹"
-        description={`동아리원 ${raterCount}명이 한 달간 직접 사용해 평가했습니다`}
+        description={`동아리원 ${settings.member_count}명이 한 달간 직접 사용해 평가했습니다`}
       />
       <div className="px-5">
         <RankingBoard apps={apps} />
