@@ -1,5 +1,3 @@
-"use server"
-
 import { NextRequest, NextResponse } from "next/server"
 import { cookies } from "next/headers"
 import { createHmac, timingSafeEqual } from "crypto"
