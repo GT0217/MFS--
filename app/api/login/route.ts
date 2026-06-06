@@ -38,14 +38,16 @@ export async function POST(req: NextRequest) {
   }
 
   const token = makeToken()
-  const store = await cookies()
-  store.set(COOKIE_NAME, token, {
+  const response = NextResponse.redirect(
+    new URL("/admin", req.url),
+    { status: 303 },
+  )
+  response.cookies.set(COOKIE_NAME, token, {
     httpOnly: true,
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
     path: "/",
     maxAge: 60 * 60 * 24,
   })
-
-  return NextResponse.json({ success: true })
+  return response
 }
