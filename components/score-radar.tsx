@@ -21,12 +21,7 @@ export function ScoreRadar({ app }: { app: AppWithScore }) {
             dataKey="axis"
             tick={{ fill: "#0b1b3b", fontSize: 13, fontWeight: 600 }}
           />
-          <PolarRadiusAxis
-            domain={[0, 10]}
-            tickCount={4}
-            tick={{ fill: "#94a3b8", fontSize: 10 }}
-            axisLine={false}
-          />
+          <PolarRadiusAxis angle={90} domain={[0, 10]} tick={false} axisLine={false} />
           <Radar
             dataKey="value"
             stroke="#2563eb"
