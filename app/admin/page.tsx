@@ -5,6 +5,7 @@ import { LoginForm } from "@/components/login-form"
 import { AdminDashboard } from "@/components/admin-dashboard"
 
 export const dynamic = "force-dynamic"
+export const revalidate = 0
 
 export default async function AdminPage() {
   const authed = await isAuthenticated()

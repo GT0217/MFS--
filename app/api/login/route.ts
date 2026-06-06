@@ -1,11 +1,10 @@
 import { NextRequest, NextResponse } from "next/server"
-import { cookies } from "next/headers"
-import { createHmac, timingSafeEqual } from "crypto"
+import { createHmac } from "crypto"
 
 const ADMIN_ID = "MFS"
 const ADMIN_PASSWORD = "tjrltnrytnsla!"
-const SESSION_SECRET = "mfs-session-secret-2025-v1"
 const COOKIE_NAME = "mfs_admin"
+const SESSION_SECRET = "mfs-session-secret-2025-v1"
 
 function sign(value: string) {
   return createHmac("sha256", SESSION_SECRET).update(value).digest("hex")
@@ -17,17 +16,15 @@ function makeToken() {
 }
 
 export async function POST(req: NextRequest) {
-  const body = await req.formData().catch(() => null)
   let id = ""
   let password = ""
 
-  if (body) {
-    id = String(body.get("id") ?? "").trim()
-    password = String(body.get("password") ?? "").trim()
-  } else {
-    const json = await req.json().catch(() => ({}))
+  try {
+    const json = await req.json()
     id = String(json.id ?? "").trim()
     password = String(json.password ?? "").trim()
+  } catch {
+    return NextResponse.json({ error: "잘못된 요청입니다." }, { status: 400 })
   }
 
   if (id !== ADMIN_ID || password !== ADMIN_PASSWORD) {
@@ -38,14 +35,13 @@ export async function POST(req: NextRequest) {
   }
 
   const token = makeToken()
-  const store = await cookies()
-  store.set(COOKIE_NAME, token, {
+  const res = NextResponse.json({ ok: true }, { status: 200 })
+  res.cookies.set(COOKIE_NAME, token, {
     httpOnly: true,
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
     path: "/",
-    maxAge: 60 * 60 * 24,
+    maxAge: 60 * 60 * 24 * 7, // 7일
   })
-
-  return NextResponse.json({ success: true })
+  return res
 }

@@ -1,10 +1,8 @@
 "use client"
 
 import { useState } from "react"
-import { useRouter } from "next/navigation"
 
 export function LoginForm() {
-  const router = useRouter()
   const [id, setId] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
@@ -20,12 +18,12 @@ export function LoginForm() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id: id.trim(), password: password.trim() }),
       })
-      const data = await res.json()
-      if (res.ok && data.success) {
-        router.push("/admin")
-        router.refresh()
+      const data = await res.json().catch(() => ({}))
+      if (res.ok) {
+        // 하드 네비게이션: 쿠키가 확실히 포함된 새 요청
+        window.location.href = "/admin"
       } else {
-        setError(data.error || "로그인에 실패했습니다.")
+        setError(data.error || "아이디 또는 비밀번호가 올바르지 않습니다.")
       }
     } catch {
       setError("서버 오류가 발생했습니다. 다시 시도해주세요.")

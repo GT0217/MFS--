@@ -8,7 +8,11 @@ let pool: Pool | undefined
 
 export function getPool() {
   if (!pool) {
-    pool = new Pool({ connectionString: process.env.DATABASE_URL })
+    const connectionString =
+      process.env.POSTGRES_URL ||
+      process.env.DATABASE_URL ||
+      process.env.POSTGRES_URL_NON_POOLING
+    pool = new Pool({ connectionString, ssl: { rejectUnauthorized: false } })
   }
   return pool
 }
