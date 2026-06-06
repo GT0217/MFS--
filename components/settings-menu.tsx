@@ -72,11 +72,13 @@ export function SettingsMenu() {
       {open && (
         <div
           role="menu"
-          className="absolute right-0 mt-2 w-64 origin-top-right overflow-hidden rounded-2xl bg-card shadow-xl ring-1 ring-border"
+          className="absolute right-0 mt-2 w-64 origin-top-right overflow-hidden rounded-2xl shadow-2xl"
+          style={{ background: "var(--color-card)", border: "1.5px solid var(--color-border)" }}
         >
-          <div className="border-b border-border px-4 py-3">
-            <p className="text-sm font-bold text-card-foreground">설정</p>
-            <p className="text-[11px] text-muted-foreground">화면을 보기 편하게 조절하세요</p>
+          {/* Header */}
+          <div style={{ borderBottom: "1px solid var(--color-border)" }} className="px-4 py-3">
+            <p className="text-sm font-bold" style={{ color: "var(--color-foreground)" }}>설정</p>
+            <p className="text-[11px]" style={{ color: "var(--color-muted-foreground)" }}>화면을 보기 편하게 조절하세요</p>
           </div>
 
           {/* Dark mode toggle */}
@@ -84,32 +86,36 @@ export function SettingsMenu() {
             type="button"
             role="menuitem"
             onClick={toggleDark}
-            className="flex w-full items-center justify-between px-4 py-3 text-left transition-colors hover:bg-muted"
+            className="flex w-full items-center justify-between px-4 py-3.5 text-left transition-colors"
+            style={{ color: "var(--color-foreground)" }}
+            onMouseEnter={(e) => (e.currentTarget.style.background = "var(--color-muted)")}
+            onMouseLeave={(e) => (e.currentTarget.style.background = "")}
           >
-            <span className="flex items-center gap-2.5 text-sm font-medium text-card-foreground">
+            <span className="flex items-center gap-2.5 text-sm font-medium">
               {dark ? (
-                <Moon className="h-4 w-4 text-primary" aria-hidden="true" />
+                <Moon className="h-4 w-4" style={{ color: "var(--color-primary)" }} aria-hidden="true" />
               ) : (
-                <Sun className="h-4 w-4 text-primary" aria-hidden="true" />
+                <Sun className="h-4 w-4" style={{ color: "var(--color-primary)" }} aria-hidden="true" />
               )}
               다크 모드
             </span>
+            {/* Toggle switch */}
             <span
-              className={`relative h-6 w-11 rounded-full transition-colors ${dark ? "bg-primary" : "bg-border"}`}
+              className="relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors duration-200"
+              style={{ background: dark ? "var(--color-primary)" : "var(--color-border)" }}
               aria-hidden="true"
             >
               <span
-                className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform ${
-                  dark ? "translate-x-[22px]" : "translate-x-0.5"
-                }`}
+                className="inline-block h-5 w-5 rounded-full bg-white shadow transition-transform duration-200"
+                style={{ transform: dark ? "translateX(22px)" : "translateX(2px)" }}
               />
             </span>
           </button>
 
           {/* Text size */}
-          <div className="border-t border-border px-4 py-3">
-            <span className="flex items-center gap-2.5 text-sm font-medium text-card-foreground">
-              <Type className="h-4 w-4 text-primary" aria-hidden="true" />
+          <div style={{ borderTop: "1px solid var(--color-border)" }} className="px-4 py-3">
+            <span className="flex items-center gap-2.5 text-sm font-semibold" style={{ color: "var(--color-foreground)" }}>
+              <Type className="h-4 w-4" style={{ color: "var(--color-primary)" }} aria-hidden="true" />
               텍스트 크기
             </span>
             <div className="mt-2.5 grid grid-cols-2 gap-2">
@@ -119,12 +125,15 @@ export function SettingsMenu() {
           </div>
 
           {/* Admin entry */}
-          <div className="border-t border-border px-4 py-2.5">
+          <div style={{ borderTop: "1px solid var(--color-border)" }} className="px-4 py-3">
             <Link
               href="/admin"
               role="menuitem"
               onClick={() => setOpen(false)}
-              className="flex items-center justify-center gap-1.5 py-1 text-[11px] font-medium text-muted-foreground transition-colors hover:text-primary"
+              className="flex items-center justify-center gap-1.5 py-0.5 text-[11px] font-medium transition-colors"
+              style={{ color: "var(--color-muted-foreground)" }}
+              onMouseEnter={(e) => (e.currentTarget.style.color = "var(--color-primary)")}
+              onMouseLeave={(e) => (e.currentTarget.style.color = "var(--color-muted-foreground)")}
             >
               <ShieldCheck className="h-3.5 w-3.5" aria-hidden="true" />
               관리자 시스템
@@ -151,11 +160,12 @@ function TextSizeButton({
     <button
       type="button"
       onClick={onClick}
-      className={`flex items-center justify-center gap-1 rounded-xl border py-2 font-semibold transition-colors ${sizeClass} ${
+      className={`flex items-center justify-center gap-1 rounded-xl border py-2 font-semibold transition-colors ${sizeClass}`}
+      style={
         active
-          ? "border-primary bg-primary/10 text-primary"
-          : "border-border bg-card text-muted-foreground hover:bg-muted"
-      }`}
+          ? { borderColor: "var(--color-primary)", background: "color-mix(in srgb, var(--color-primary) 12%, transparent)", color: "var(--color-primary)" }
+          : { borderColor: "var(--color-border)", background: "var(--color-card)", color: "var(--color-muted-foreground)" }
+      }
     >
       {active && <Check className="h-3.5 w-3.5" aria-hidden="true" />}
       {label}
