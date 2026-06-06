@@ -1,6 +1,13 @@
 "use client"
 
-import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer } from "recharts"
+import {
+  Radar,
+  RadarChart,
+  PolarGrid,
+  PolarAngleAxis,
+  PolarRadiusAxis,
+  ResponsiveContainer,
+} from "recharts"
 import type { AppWithScore } from "@/lib/types"
 
 export function ScoreRadar({ app }: { app: AppWithScore }) {
@@ -16,17 +23,36 @@ export function ScoreRadar({ app }: { app: AppWithScore }) {
     <div className="h-72 w-full">
       <ResponsiveContainer width="100%" height="100%">
         <RadarChart data={data} outerRadius="72%">
-          <PolarGrid stroke="#e2e8f0" />
+          <PolarGrid
+            stroke="var(--color-border)"
+            strokeOpacity={0.8}
+          />
           <PolarAngleAxis
             dataKey="axis"
-            tick={{ fill: "#0f172a", fontSize: 13, fontWeight: 600 }}
+            tick={({ x, y, payload, textAnchor }) => (
+              <text
+                x={x}
+                y={y}
+                textAnchor={textAnchor}
+                fontSize={12}
+                fontWeight={600}
+                fill="var(--color-foreground)"
+              >
+                {payload.value}
+              </text>
+            )}
           />
-          <PolarRadiusAxis angle={90} domain={[0, 10]} tick={false} axisLine={false} />
+          <PolarRadiusAxis
+            angle={90}
+            domain={[0, 10]}
+            tick={false}
+            axisLine={false}
+          />
           <Radar
             dataKey="value"
             stroke="#14bb51"
             fill="#14bb51"
-            fillOpacity={0.35}
+            fillOpacity={0.3}
             strokeWidth={2}
           />
         </RadarChart>

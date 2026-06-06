@@ -94,6 +94,7 @@ export async function saveApp(formData: FormData) {
   const raterCount = num(formData.get("rater_count"))
   const sortOrder = num(formData.get("sort_order"))
   const tags = JSON.stringify(parseTags(formData.get("tags")))
+  const appStoreUrl = str(formData.get("app_store_url")) || null
   const sc = num(formData.get("score_convenience"))
   const sv = num(formData.get("score_variety"))
   const ss = num(formData.get("score_speed"))
@@ -111,18 +112,19 @@ export async function saveApp(formData: FormData) {
       `UPDATE apps SET name=$1, category=$2, tagline=$3, description=$4, accent_color=$5,
          club_comment=$6, rater_count=$7, sort_order=$8, tags=$9::jsonb,
          score_convenience=$10, score_variety=$11, score_speed=$12, score_readability=$13, score_security=$14,
-         ${uploaded ? "logo_url=$16," : ""} updated_at=now()
+         app_store_url=$16,
+         ${uploaded ? "logo_url=$17," : ""} updated_at=now()
        WHERE id=$15`,
       uploaded
-        ? [name, category, tagline, description, accentColor, clubComment, raterCount, sortOrder, tags, sc, sv, ss, sr, sse, id, uploaded]
-        : [name, category, tagline, description, accentColor, clubComment, raterCount, sortOrder, tags, sc, sv, ss, sr, sse, id],
+        ? [name, category, tagline, description, accentColor, clubComment, raterCount, sortOrder, tags, sc, sv, ss, sr, sse, id, appStoreUrl, uploaded]
+        : [name, category, tagline, description, accentColor, clubComment, raterCount, sortOrder, tags, sc, sv, ss, sr, sse, id, appStoreUrl],
     )
   } else {
     await getPool().query(
       `INSERT INTO apps (name, category, tagline, description, accent_color, club_comment, rater_count, sort_order, tags,
-         score_convenience, score_variety, score_speed, score_readability, score_security, logo_url)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9::jsonb,$10,$11,$12,$13,$14,$15)`,
-      [name, category, tagline, description, accentColor, clubComment, raterCount, sortOrder, tags, sc, sv, ss, sr, sse, uploaded],
+         score_convenience, score_variety, score_speed, score_readability, score_security, logo_url, app_store_url)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9::jsonb,$10,$11,$12,$13,$14,$15,$16)`,
+      [name, category, tagline, description, accentColor, clubComment, raterCount, sortOrder, tags, sc, sv, ss, sr, sse, uploaded, appStoreUrl],
     )
   }
   revalidateAll()
