@@ -16,11 +16,12 @@ export function LoginForm() {
       const res = await fetch("/api/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: id.trim(), password: password.trim() }),
+        body: JSON.stringify({ id, password }),
+        credentials: "include",
       })
       const data = await res.json().catch(() => ({}))
-      if (res.ok) {
-        // 하드 네비게이션: 쿠키가 확실히 포함된 새 요청
+      if (res.ok && data.ok) {
+        // 전체 페이지 새로고침으로 쿠키 확실히 반영
         window.location.href = "/admin"
       } else {
         setError(data.error || "아이디 또는 비밀번호가 올바르지 않습니다.")
@@ -44,6 +45,7 @@ export function LoginForm() {
           value={id}
           onChange={(e) => setId(e.target.value)}
           autoComplete="username"
+          placeholder="MFS"
           required
           className="rounded-xl border border-border bg-background px-4 py-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-ring/30"
         />

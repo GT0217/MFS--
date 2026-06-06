@@ -1,19 +1,9 @@
 import { NextRequest, NextResponse } from "next/server"
-import { createHmac } from "crypto"
+import { cookies } from "next/headers"
+import { ADMIN_ID, ADMIN_PASSWORD } from "@/lib/auth"
 
-const ADMIN_ID = "MFS"
-const ADMIN_PASSWORD = "tjrltnrytnsla!"
 const COOKIE_NAME = "mfs_admin"
-const SESSION_SECRET = "mfs-session-secret-2025-v1"
-
-function sign(value: string) {
-  return createHmac("sha256", SESSION_SECRET).update(value).digest("hex")
-}
-
-function makeToken() {
-  const payload = `admin.${Date.now()}`
-  return `${payload}.${sign(payload)}`
-}
+const VALID_TOKEN = "mfs-admin-token-2025-fixed"
 
 export async function POST(req: NextRequest) {
   let id = ""
@@ -34,14 +24,15 @@ export async function POST(req: NextRequest) {
     )
   }
 
-  const token = makeToken()
-  const res = NextResponse.json({ ok: true }, { status: 200 })
-  res.cookies.set(COOKIE_NAME, token, {
+  // next/headers cookies()로 직접 설정 — response.cookies와 달리 확실히 동작
+  const store = await cookies()
+  store.set(COOKIE_NAME, VALID_TOKEN, {
     httpOnly: true,
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
     path: "/",
-    maxAge: 60 * 60 * 24 * 7, // 7일
+    maxAge: 60 * 60 * 24 * 30, // 30일
   })
-  return res
+
+  return NextResponse.json({ ok: true })
 }
