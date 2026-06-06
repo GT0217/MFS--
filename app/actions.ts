@@ -31,8 +31,10 @@ async function maybeUpload(file: FormDataEntryValue | null): Promise<string | nu
   const f = file as File
   if (!f.size) return null
   const ext = f.name.split(".").pop() || "png"
-  const blob = await put(`mfs/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`, f, {
+  const blob = await put(`mfs/${Date.now()}-${ext}`, f, {
     access: "public",
+    addRandomSuffix: true,
+    token: process.env.BLOB_READ_WRITE_TOKEN,
   })
   return blob.url
 }
@@ -40,7 +42,7 @@ async function maybeUpload(file: FormDataEntryValue | null): Promise<string | nu
 async function safeDelBlob(url: string | null) {
   if (!url || !url.includes("blob.vercel-storage.com")) return
   try {
-    await del(url)
+    await del(url, { token: process.env.BLOB_READ_WRITE_TOKEN })
   } catch {
     // ignore
   }
