@@ -14,7 +14,7 @@ export default async function HomePage() {
   return (
     <div>
       {/* Hero */}
-      <header className="bg-gradient-to-b from-[#1d4ed8] to-[#2563eb] px-5 pb-8 pt-12 text-white">
+      <header className="bg-gradient-to-b from-[#0f9a42] to-[#14bb51] px-5 pb-8 pt-12 text-white">
         <p className="text-xs font-semibold tracking-wide text-white/80">MFS CLUB · 2025.06</p>
         <h1 className="mt-2 text-balance text-2xl font-bold leading-snug">
           대학생이 직접 써본
@@ -42,7 +42,7 @@ export default async function HomePage() {
               href={`/ranking/${app.id}`}
               className="relative flex w-64 shrink-0 snap-start flex-col justify-between rounded-3xl p-5 text-white shadow-lg"
               style={{
-                background: `linear-gradient(150deg, ${app.accent_color}, #1d4ed8)`,
+                background: `linear-gradient(150deg, ${app.accent_color}, #0f9a42)`,
                 minHeight: 190,
               }}
             >

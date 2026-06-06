@@ -24,8 +24,8 @@ export function ScoreRadar({ app }: { app: AppWithScore }) {
           <PolarRadiusAxis angle={90} domain={[0, 10]} tick={false} axisLine={false} />
           <Radar
             dataKey="value"
-            stroke="#2563eb"
-            fill="#2563eb"
+            stroke="#14bb51"
+            fill="#14bb51"
             fillOpacity={0.35}
             strokeWidth={2}
           />

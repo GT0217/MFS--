@@ -28,7 +28,7 @@ export function AppLogo({
       style={{
         width: size,
         height: size,
-        backgroundColor: app.accent_color || "#2563eb",
+        backgroundColor: app.accent_color || "#14bb51",
         fontSize: size * 0.42,
       }}
       aria-hidden="true"

@@ -10,11 +10,11 @@
   --color-muted: #eef2f9;
   --color-muted-foreground: #5b6b86;
   --color-border: #e4eaf3;
-  --color-primary: #2563eb;
+  --color-primary: #14bb51;
   --color-primary-foreground: #ffffff;
-  --color-primary-dark: #1d4ed8;
-  --color-accent: #1e40af;
-  --color-ring: #2563eb;
+  --color-primary-dark: #0f9a42;
+  --color-accent: #0b7a33;
+  --color-ring: #14bb51;
 
   --radius: 1.25rem;
 }

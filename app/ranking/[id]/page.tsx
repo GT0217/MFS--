@@ -19,7 +19,7 @@ export default async function AppDetailPage({ params }: { params: Promise<{ id: 
       {/* Header */}
       <header
         className="px-5 pb-7 pt-12 text-white"
-        style={{ background: `linear-gradient(160deg, ${app.accent_color}, #1d4ed8)` }}
+        style={{ background: `linear-gradient(160deg, ${app.accent_color}, #0f9a42)` }}
       >
         <Link href="/ranking" className="inline-flex items-center gap-1 text-sm font-medium text-white/90">
           <ChevronLeft className="h-4 w-4" aria-hidden="true" />

@@ -157,17 +157,6 @@ function ImagePicker({ name, current, text }: { name: string; current?: string |
   )
 }
 
-function SubmitButton() {
-  return (
-    <button
-      type="submit"
-      className="rounded-lg bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground transition-all hover:opacity-90 active:scale-95"
-    >
-      저장
-    </button>
-  )
-}
-
 function AppForm({ app }: { app?: AppWithScore }) {
   return (
     <div className="flex flex-col gap-4">
@@ -195,7 +184,7 @@ function AppForm({ app }: { app?: AppWithScore }) {
             <input name="tags" defaultValue={(app?.tags ?? []).join(", ")} placeholder="1초 송금, 다크 모드" className={input} />
           </Field>
           <Field text="대표 색상">
-            <input name="accent_color" type="color" defaultValue={app?.accent_color ?? "#2563eb"} className="h-10 w-full rounded-lg border border-border bg-background" />
+            <input name="accent_color" type="color" defaultValue={app?.accent_color ?? "#14bb51"} className="h-10 w-full rounded-lg border border-border bg-background" />
           </Field>
           <Field text="정렬 순서">
             <input name="sort_order" type="number" defaultValue={app?.sort_order ?? 0} className={input} />

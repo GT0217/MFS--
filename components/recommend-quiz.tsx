@@ -133,7 +133,7 @@ export function RecommendQuiz({ apps }: { apps: AppWithScore[] }) {
       <div>
         <div
           className="rounded-3xl p-6 text-white shadow-lg"
-          style={{ background: `linear-gradient(160deg, ${best.app.accent_color}, #1d4ed8)` }}
+          style={{ background: `linear-gradient(160deg, ${best.app.accent_color}, #0f9a42)` }}
         >
           <p className="text-xs font-semibold text-white/80">AI 추천 결과</p>
           <div className="mt-3 flex items-center gap-3">

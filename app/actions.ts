@@ -89,7 +89,7 @@ export async function saveApp(formData: FormData) {
   const category = str(formData.get("category")) || "핀테크"
   const tagline = str(formData.get("tagline")) || null
   const description = str(formData.get("description")) || null
-  const accentColor = str(formData.get("accent_color")) || "#2563eb"
+  const accentColor = str(formData.get("accent_color")) || "#14bb51"
   const clubComment = str(formData.get("club_comment")) || null
   const raterCount = num(formData.get("rater_count"))
   const sortOrder = num(formData.get("sort_order"))
