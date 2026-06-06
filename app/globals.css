@@ -19,6 +19,26 @@
   --radius: 1rem;
 }
 
+/* ── Dark mode overrides ── */
+.dark {
+  --color-background: #0f172a;
+  --color-foreground: #f1f5f9;
+  --color-card: #1e293b;
+  --color-card-foreground: #f1f5f9;
+  --color-muted: #1e293b;
+  --color-muted-foreground: #94a3b8;
+  --color-border: #334155;
+  --color-primary: #14bb51;
+  --color-primary-foreground: #ffffff;
+  --color-primary-dark: #0f9a42;
+  --color-ring: #14bb51;
+}
+
+/* ── Text size ── */
+html.text-large {
+  font-size: 18px;
+}
+
 * {
   -webkit-tap-highlight-color: transparent;
 }
