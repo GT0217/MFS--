@@ -2,33 +2,32 @@
   "name": "seokyeong-mfs",
   "private": true,
   "version": "0.0.0",
-  "type": "module",
   "scripts": {
-    "dev": "vinxi dev",
-    "build": "vinxi build --preset vercel",
-    "start": "vinxi start",
-    "gen-icons": "node scripts/gen-icons.mjs"
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
   },
   "engines": {
     "node": ">=20"
   },
   "dependencies": {
-    "@notionhq/client": "^2.2.15",
-    "@tanstack/react-router": "1.120.20",
-    "@tanstack/router-devtools": "1.120.20",
-    "@tanstack/start": "1.120.20",
+    "@vercel/blob": "^2.4.0",
+    "lucide-react": "^1.17.0",
+    "next": "^16.0.0",
+    "pg": "^8.13.1",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
-    "vinxi": "0.5.11"
+    "recharts": "^3.8.1",
+    "server-only": "^0.0.1"
   },
   "devDependencies": {
-    "@tailwindcss/vite": "^4.1.8",
+    "@tailwindcss/postcss": "^4.1.8",
     "@types/node": "^22.15.21",
+    "@types/pg": "^8.11.10",
     "@types/react": "^19.1.5",
     "@types/react-dom": "^19.1.5",
-    "sharp": "^0.33.5",
     "tailwindcss": "^4.1.8",
-    "typescript": "^5.8.3",
-    "vite-tsconfig-paths": "^5.1.4"
+    "typescript": "^5.8.3"
   }
 }
