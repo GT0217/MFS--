@@ -70,7 +70,7 @@ export async function login(_prev: unknown, formData: FormData) {
     return { error: "아이디 또는 비밀번호가 올바르지 않습니다.", success: false }
   }
   await createSession()
-  return { error: null, success: true }
+  redirect("/admin")
 }
 
 export async function logout() {

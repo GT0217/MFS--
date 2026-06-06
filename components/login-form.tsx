@@ -10,6 +10,7 @@ export function LoginForm() {
 
   useEffect(() => {
     if (state?.success) {
+      router.push("/admin")
       router.refresh()
     }
   }, [state, router])
