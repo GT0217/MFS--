@@ -11,12 +11,12 @@
   },
   "dependencies": {
     "@notionhq/client": "^2.2.15",
-    "@tanstack/react-router": "1.120.3",
-    "@tanstack/router-devtools": "1.120.3",
-    "@tanstack/start": "1.120.3",
+    "@tanstack/react-router": "^1.120.20",
+    "@tanstack/router-devtools": "^1.120.20",
+    "@tanstack/start": "^1.120.20",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
-    "vinxi": "0.5.3"
+    "vinxi": "^0.5.3"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.1.8",
@@ -27,16 +27,5 @@
     "tailwindcss": "^4.1.8",
     "typescript": "^5.8.3",
     "vite-tsconfig-paths": "^5.1.4"
-  },
-  "overrides": {
-    "@tanstack/start-config": "1.120.3",
-    "@tanstack/start-client": "1.120.3",
-    "@tanstack/start-server": "1.120.3",
-    "@tanstack/start-plugin-core": "1.120.3",
-    "@tanstack/router-generator": "1.120.3",
-    "@tanstack/router-plugin": "1.120.3",
-    "@tanstack/router-core": "1.120.3",
-    "@tanstack/router-utils": "1.120.3",
-    "@tanstack/react-router-devtools": "1.120.3"
   }
 }
