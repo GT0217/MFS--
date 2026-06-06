@@ -1,30 +1,50 @@
 "use client"
 
-import { useActionState, useEffect } from "react"
+import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { login } from "@/app/actions"
 
 export function LoginForm() {
   const router = useRouter()
-  const [state, formAction, pending] = useActionState(login, null)
+  const [id, setId] = useState("")
+  const [password, setPassword] = useState("")
+  const [error, setError] = useState("")
+  const [loading, setLoading] = useState(false)
 
-  useEffect(() => {
-    if (state?.success) {
-      router.push("/admin")
-      router.refresh()
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    setError("")
+    setLoading(true)
+    try {
+      const res = await fetch("/api/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: id.trim(), password: password.trim() }),
+      })
+      const data = await res.json()
+      if (res.ok && data.success) {
+        router.push("/admin")
+        router.refresh()
+      } else {
+        setError(data.error || "로그인에 실패했습니다.")
+      }
+    } catch {
+      setError("서버 오류가 발생했습니다. 다시 시도해주세요.")
+    } finally {
+      setLoading(false)
     }
-  }, [state, router])
+  }
 
   return (
-    <form action={formAction} className="flex flex-col gap-4">
+    <form onSubmit={handleSubmit} className="flex flex-col gap-4">
       <div className="flex flex-col gap-1.5">
         <label htmlFor="id" className="text-sm font-medium">
           아이디
         </label>
         <input
           id="id"
-          name="id"
           type="text"
+          value={id}
+          onChange={(e) => setId(e.target.value)}
           autoComplete="username"
           required
           className="rounded-xl border border-border bg-background px-4 py-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-ring/30"
@@ -36,24 +56,23 @@ export function LoginForm() {
         </label>
         <input
           id="password"
-          name="password"
           type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
           autoComplete="current-password"
           required
           className="rounded-xl border border-border bg-background px-4 py-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-ring/30"
         />
       </div>
-      {state?.error ? (
-        <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">
-          {state.error}
-        </p>
-      ) : null}
+      {error && (
+        <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{error}</p>
+      )}
       <button
         type="submit"
-        disabled={pending}
+        disabled={loading}
         className="rounded-xl bg-primary px-5 py-3 font-semibold text-primary-foreground transition-all hover:opacity-90 active:scale-95 disabled:opacity-60"
       >
-        {pending ? "로그인 중..." : "로그인"}
+        {loading ? "로그인 중..." : "로그인"}
       </button>
     </form>
   )
