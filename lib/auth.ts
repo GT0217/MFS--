@@ -3,16 +3,13 @@ import { createHmac, timingSafeEqual } from "crypto"
 
 const COOKIE_NAME = "mfs_admin"
 
-function secret() {
-  return (
-    process.env.ADMIN_SESSION_SECRET ||
-    process.env.ADMIN_PASSWORD ||
-    "mfs-fallback-secret"
-  )
-}
+// 고정 자격증명 — 환경변수에 의존하지 않음
+const ADMIN_ID = "MFS"
+const ADMIN_PASSWORD = "tjrltnrytnsla!"
+const SESSION_SECRET = "mfs-session-secret-2025-v1"
 
 function sign(value: string) {
-  return createHmac("sha256", secret()).update(value).digest("hex")
+  return createHmac("sha256", SESSION_SECRET).update(value).digest("hex")
 }
 
 function makeToken() {
@@ -34,9 +31,7 @@ function verifyToken(token: string | undefined): boolean {
 }
 
 export function checkCredentials(id: string, password: string): boolean {
-  const adminId = process.env.ADMIN_ID || "MFS"
-  const adminPassword = process.env.ADMIN_PASSWORD || "tjrltnrytnsla!"
-  return id === adminId && password === adminPassword
+  return id === ADMIN_ID && password === ADMIN_PASSWORD
 }
 
 export async function createSession() {
@@ -46,7 +41,7 @@ export async function createSession() {
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
     path: "/",
-    maxAge: 60 * 60 * 24, // 24시간
+    maxAge: 60 * 60 * 24,
   })
 }
 
