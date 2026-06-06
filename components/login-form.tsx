@@ -20,10 +20,10 @@ export function LoginForm() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id: id.trim(), password: password.trim() }),
       })
-      const data = await res.json().catch(() => ({}))
-      if (res.ok && data.ok) {
-        // 캐시 우회: 타임스탬프 파라미터로 강제 새 요청
-        window.location.replace("/admin?_=" + Date.now())
+      const data = await res.json()
+      if (res.ok && data.success) {
+        router.push("/admin")
+        router.refresh()
       } else {
         setError(data.error || "로그인에 실패했습니다.")
       }
