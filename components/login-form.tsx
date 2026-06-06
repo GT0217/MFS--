@@ -1,51 +1,22 @@
 "use client"
 
-import { useState } from "react"
+import { useActionState } from "react"
+import { login } from "@/app/actions"
 
 export function LoginForm() {
-  const [id, setId] = useState("")
-  const [password, setPassword] = useState("")
-  const [error, setError] = useState("")
-  const [loading, setLoading] = useState(false)
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    setError("")
-    setLoading(true)
-    try {
-      const res = await fetch("/api/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id, password }),
-        credentials: "include",
-      })
-      const data = await res.json().catch(() => ({}))
-      if (res.ok && data.ok) {
-        // 전체 페이지 새로고침으로 쿠키 확실히 반영
-        window.location.href = "/admin"
-      } else {
-        setError(data.error || "아이디 또는 비밀번호가 올바르지 않습니다.")
-      }
-    } catch {
-      setError("서버 오류가 발생했습니다. 다시 시도해주세요.")
-    } finally {
-      setLoading(false)
-    }
-  }
+  const [state, formAction, pending] = useActionState(login, null)
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+    <form action={formAction} className="flex flex-col gap-4">
       <div className="flex flex-col gap-1.5">
         <label htmlFor="id" className="text-sm font-medium">
           아이디
         </label>
         <input
           id="id"
+          name="id"
           type="text"
-          value={id}
-          onChange={(e) => setId(e.target.value)}
           autoComplete="username"
-          placeholder="MFS"
           required
           className="rounded-xl border border-border bg-background px-4 py-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-ring/30"
         />
@@ -56,23 +27,22 @@ export function LoginForm() {
         </label>
         <input
           id="password"
+          name="password"
           type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
           autoComplete="current-password"
           required
           className="rounded-xl border border-border bg-background px-4 py-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-ring/30"
         />
       </div>
-      {error && (
-        <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{error}</p>
+      {state?.error && (
+        <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{state.error}</p>
       )}
       <button
         type="submit"
-        disabled={loading}
+        disabled={pending}
         className="rounded-xl bg-primary px-5 py-3 font-semibold text-primary-foreground transition-all hover:opacity-90 active:scale-95 disabled:opacity-60"
       >
-        {loading ? "로그인 중..." : "로그인"}
+        {pending ? "로그인 중..." : "로그인"}
       </button>
     </form>
   )
