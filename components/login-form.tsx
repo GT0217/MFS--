@@ -1,10 +1,19 @@
 "use client"
 
-import { useActionState } from "react"
+import { useActionState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { login } from "@/app/actions"
 
 export function LoginForm() {
+  const router = useRouter()
   const [state, formAction, pending] = useActionState(login, null)
+
+  useEffect(() => {
+    if (state?.success) {
+      router.push("/admin")
+      router.refresh()
+    }
+  }, [state, router])
 
   return (
     <form action={formAction} className="flex flex-col gap-4">
