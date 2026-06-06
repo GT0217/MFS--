@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { FileText, Megaphone } from "lucide-react"
 import type { Insight } from "@/lib/types"
+import { formatDate } from "@/lib/types"
 
 const TABS = [
   { key: "칼럼", label: "MFS 칼럼" },
@@ -63,7 +64,7 @@ export function InsightTabs({ insights }: { insights: Insight[] }) {
                 )}
                 <p className="mt-2 text-[11px] text-muted-foreground">
                   {insight.author}
-                  {insight.published_on ? ` · ${insight.published_on}` : ""}
+                  {insight.published_on ? ` · ${formatDate(insight.published_on)}` : ""}
                 </p>
               </div>
             </div>

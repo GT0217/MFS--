@@ -16,10 +16,10 @@ export function ScoreRadar({ app }: { app: AppWithScore }) {
     <div className="h-72 w-full">
       <ResponsiveContainer width="100%" height="100%">
         <RadarChart data={data} outerRadius="72%">
-          <PolarGrid stroke="#e4eaf3" />
+          <PolarGrid stroke="#e2e8f0" />
           <PolarAngleAxis
             dataKey="axis"
-            tick={{ fill: "#0b1b3b", fontSize: 13, fontWeight: 600 }}
+            tick={{ fill: "#0f172a", fontSize: 13, fontWeight: 600 }}
           />
           <PolarRadiusAxis angle={90} domain={[0, 10]} tick={false} axisLine={false} />
           <Radar

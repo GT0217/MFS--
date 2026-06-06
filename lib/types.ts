@@ -63,3 +63,10 @@ export const CRITERIA: Criterion[] = [
   { key: "readability", label: "가독성", field: "score_readability" },
   { key: "security", label: "보안성", field: "score_security" },
 ]
+
+export function formatDate(value: string | null): string {
+  if (!value) return ""
+  const d = new Date(value)
+  if (Number.isNaN(d.getTime())) return ""
+  return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, "0")}.${String(d.getDate()).padStart(2, "0")}`
+}

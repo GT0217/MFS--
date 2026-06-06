@@ -1,6 +1,7 @@
 import Link from "next/link"
 import { ArrowRight, TrendingUp, Sparkles } from "lucide-react"
 import { getApps, getInsights } from "@/lib/db"
+import { formatDate } from "@/lib/types"
 import { AppLogo } from "@/components/app-logo"
 
 export const dynamic = "force-dynamic"
@@ -100,8 +101,8 @@ export default async function HomePage() {
             <p className="mt-1 font-bold leading-snug">{latestColumn.title}</p>
             <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">{latestColumn.summary}</p>
             <p className="mt-2 text-[11px] text-muted-foreground">
-              {latestColumn.author}
-              {latestColumn.published_on ? ` · ${latestColumn.published_on}` : ""}
+                {latestColumn.author}
+                {latestColumn.published_on ? ` · ${formatDate(latestColumn.published_on)}` : ""}
             </p>
           </Link>
         </section>
