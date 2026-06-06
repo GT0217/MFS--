@@ -1,34 +1,13 @@
 import { NextRequest, NextResponse } from "next/server"
-import { cookies } from "next/headers"
-import { createHmac, timingSafeEqual } from "crypto"
+import { COOKIE_NAME, SESSION_TOKEN } from "@/lib/auth"
 
 const ADMIN_ID = "MFS"
 const ADMIN_PASSWORD = "tjrltnrytnsla!"
-const SESSION_SECRET = "mfs-session-secret-2025-v1"
-const COOKIE_NAME = "mfs_admin"
-
-function sign(value: string) {
-  return createHmac("sha256", SESSION_SECRET).update(value).digest("hex")
-}
-
-function makeToken() {
-  const payload = `admin.${Date.now()}`
-  return `${payload}.${sign(payload)}`
-}
 
 export async function POST(req: NextRequest) {
-  const body = await req.formData().catch(() => null)
-  let id = ""
-  let password = ""
-
-  if (body) {
-    id = String(body.get("id") ?? "").trim()
-    password = String(body.get("password") ?? "").trim()
-  } else {
-    const json = await req.json().catch(() => ({}))
-    id = String(json.id ?? "").trim()
-    password = String(json.password ?? "").trim()
-  }
+  const json = await req.json().catch(() => ({}))
+  const id = String(json.id ?? "").trim()
+  const password = String(json.password ?? "").trim()
 
   if (id !== ADMIN_ID || password !== ADMIN_PASSWORD) {
     return NextResponse.json(
@@ -37,9 +16,8 @@ export async function POST(req: NextRequest) {
     )
   }
 
-  const token = makeToken()
   const response = NextResponse.json({ ok: true }, { status: 200 })
-  response.cookies.set(COOKIE_NAME, token, {
+  response.cookies.set(COOKIE_NAME, SESSION_TOKEN, {
     httpOnly: true,
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
