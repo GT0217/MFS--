@@ -195,15 +195,15 @@ function AppForm({ app }: { app?: AppWithScore }) {
         <div className="rounded-xl bg-muted/50 p-4">
           <p className="mb-3 text-xs font-semibold text-muted-foreground">평가 점수 (0–10)</p>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-            {CRITERIA.map((c) => (
+            {CRITERIA.filter((c) => c.score !== undefined).map((c) => (
               <Field key={c.key} text={c.label}>
                 <input
-                  name={c.score}
+                  name={c.score as string}
                   type="number"
                   step="0.1"
                   min="0"
                   max="10"
-                  defaultValue={app ? (app[c.score] as number) : 0}
+                  defaultValue={app && c.score ? (app[c.score] as number) : 0}
                   className={input}
                 />
               </Field>

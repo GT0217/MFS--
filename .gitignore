@@ -16,3 +16,4 @@ dist/
 .DS_Store
 Thumbs.db
 app.config.timestamp_*.js
+.vercel

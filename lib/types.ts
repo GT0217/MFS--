@@ -52,16 +52,18 @@ export function overallScore(app: App): number {
 export type Criterion = {
   key: "overall" | "convenience" | "variety" | "speed" | "readability" | "security"
   label: string
-  field: keyof App | "overall"
+  field: keyof AppWithScore
+  /** DB column name — only present for the 5 real score criteria (not "overall") */
+  score?: keyof App
 }
 
 export const CRITERIA: Criterion[] = [
-  { key: "overall", label: "종합", field: "overall" },
-  { key: "convenience", label: "편의성", field: "score_convenience" },
-  { key: "variety", label: "다양성", field: "score_variety" },
-  { key: "speed", label: "신속성", field: "score_speed" },
-  { key: "readability", label: "가독성", field: "score_readability" },
-  { key: "security", label: "보안성", field: "score_security" },
+  { key: "overall",     label: "종합",   field: "overall" },
+  { key: "convenience", label: "편의성", field: "score_convenience", score: "score_convenience" },
+  { key: "variety",     label: "다양성", field: "score_variety",     score: "score_variety" },
+  { key: "speed",       label: "신속성", field: "score_speed",       score: "score_speed" },
+  { key: "readability", label: "가독성", field: "score_readability", score: "score_readability" },
+  { key: "security",    label: "보안성", field: "score_security",    score: "score_security" },
 ]
 
 export function formatDate(value: string | null): string {
