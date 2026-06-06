@@ -19,14 +19,11 @@ export function LoginForm() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id: id.trim(), password: password.trim() }),
-        redirect: "manual",
       })
-      // 303 redirect = 로그인 성공 → 쿠키가 Set-Cookie 헤더에 포함됨
-      if (res.status === 303 || res.status === 0 || res.ok) {
-        // 하드 네비게이션으로 쿠키를 확실히 전달
+      const data = await res.json().catch(() => ({}))
+      if (res.ok && data.ok) {
         window.location.href = "/admin"
       } else {
-        const data = await res.json().catch(() => ({}))
         setError(data.error || "로그인에 실패했습니다.")
       }
     } catch {

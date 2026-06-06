@@ -38,10 +38,7 @@ export async function POST(req: NextRequest) {
   }
 
   const token = makeToken()
-  const response = NextResponse.redirect(
-    new URL("/admin", req.url),
-    { status: 303 },
-  )
+  const response = NextResponse.json({ ok: true }, { status: 200 })
   response.cookies.set(COOKIE_NAME, token, {
     httpOnly: true,
     sameSite: "lax",
