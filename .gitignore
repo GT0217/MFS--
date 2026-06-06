@@ -1,0 +1,18 @@
+# 의존성 패키지 (용량 크고 자동 설치되므로 제외)
+node_modules/
+
+# 빌드 결과물
+.output/
+.vinxi/
+dist/
+
+# 환경변수 (비밀번호 포함되므로 절대 올리면 안됨)
+.env
+.env.local
+.env.production
+
+# 임시 파일
+*.log
+.DS_Store
+Thumbs.db
+app.config.timestamp_*.js
