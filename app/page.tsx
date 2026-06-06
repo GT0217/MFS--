@@ -18,8 +18,10 @@ export default async function HomePage() {
   return (
     <div className="pb-2">
       {/* Hero */}
-      <header className="relative overflow-hidden px-5 pb-12 pt-14 text-white">
-        <div className="absolute inset-0 bg-gradient-to-br from-[#0b7a33] via-[#0f9a42] to-[#14bb51]" aria-hidden="true" />
+      <header
+        className="relative overflow-hidden px-5 pb-12 pt-14 text-white"
+        style={{ background: "linear-gradient(135deg, #0b7a33 0%, #0f9a42 50%, #14bb51 100%)" }}
+      >
         <div
           className="absolute -right-16 -top-16 h-56 w-56 rounded-full bg-[#0ee912]/25 blur-2xl"
           aria-hidden="true"

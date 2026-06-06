@@ -1,7 +1,7 @@
 "use client"
 
-import { useState } from "react"
-import { FileText, Megaphone, X, ChevronLeft, ChevronRight } from "lucide-react"
+import { useState, useEffect } from "react"
+import { FileText, Megaphone, ChevronLeft, ChevronRight } from "lucide-react"
 import type { Insight } from "@/lib/types"
 import { formatDate } from "@/lib/types"
 
@@ -25,6 +25,30 @@ function InsightViewer({
   hasNext: boolean
   hasPrev: boolean
 }) {
+  // ESC 키 / 휴대폰 뒤로가기(브라우저 back)로도 닫히게 하고, 배경 스크롤을 잠근다.
+  useEffect(() => {
+    window.history.pushState({ mfsViewer: true }, "")
+    const onPop = () => onClose()
+    window.addEventListener("popstate", onPop)
+
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") window.history.back()
+    }
+    document.addEventListener("keydown", onKey)
+
+    const { overflow } = document.body.style
+    document.body.style.overflow = "hidden"
+
+    return () => {
+      window.removeEventListener("popstate", onPop)
+      document.removeEventListener("keydown", onKey)
+      document.body.style.overflow = overflow
+    }
+  }, [onClose])
+
+  // 닫기 버튼도 히스토리 back으로 통일 → popstate가 실제 닫기를 처리
+  const handleBack = () => window.history.back()
+
   return (
     <div
       className="fixed inset-0 z-50 flex flex-col bg-background"
@@ -36,17 +60,18 @@ function InsightViewer({
       <div className="sticky top-0 z-10 flex items-center justify-between border-b border-border bg-card/95 backdrop-blur-sm px-4 py-3">
         <button
           type="button"
-          onClick={onClose}
-          aria-label="닫기"
-          className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-muted"
+          onClick={handleBack}
+          aria-label="목록으로 뒤로가기"
+          className="flex items-center gap-1 rounded-full py-1 pl-1 pr-2.5 text-sm font-semibold text-foreground hover:bg-muted"
         >
-          <X className="h-5 w-5" aria-hidden="true" />
+          <ChevronLeft className="h-5 w-5" aria-hidden="true" />
+          뒤로
         </button>
-        <div className="flex-1 text-center">
+        <div className="min-w-0 flex-1 px-2 text-center">
           <p className="text-xs font-semibold text-primary">{insight.category || insight.type}</p>
-          <p className="mt-0.5 text-sm font-bold line-clamp-1">{insight.title}</p>
+          <p className="mt-0.5 truncate text-sm font-bold">{insight.title}</p>
         </div>
-        <div className="w-8" />
+        <div className="w-[60px] shrink-0" />
       </div>
 
       {/* Content */}
