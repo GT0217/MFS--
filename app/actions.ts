@@ -91,10 +91,10 @@ export async function saveApp(formData: FormData) {
   const description = str(formData.get("description")) || null
   const accentColor = str(formData.get("accent_color")) || "#14bb51"
   const clubComment = str(formData.get("club_comment")) || null
+  const appStoreUrl = str(formData.get("app_store_url")) || null
   const raterCount = num(formData.get("rater_count"))
   const sortOrder = num(formData.get("sort_order"))
   const tags = JSON.stringify(parseTags(formData.get("tags")))
-  const appStoreUrl = str(formData.get("app_store_url")) || null
   const sc = num(formData.get("score_convenience"))
   const sv = num(formData.get("score_variety"))
   const ss = num(formData.get("score_speed"))
@@ -104,27 +104,50 @@ export async function saveApp(formData: FormData) {
   const uploaded = await maybeUpload(formData.get("logo"))
 
   if (id) {
+    // 기존 앱 수정
     if (uploaded) {
       const prev = await getPool().query("SELECT logo_url FROM apps WHERE id = $1", [id])
       await safeDelBlob(prev.rows[0]?.logo_url ?? null)
     }
-    await getPool().query(
-      `UPDATE apps SET name=$1, category=$2, tagline=$3, description=$4, accent_color=$5,
-         club_comment=$6, rater_count=$7, sort_order=$8, tags=$9::jsonb,
-         score_convenience=$10, score_variety=$11, score_speed=$12, score_readability=$13, score_security=$14,
-         app_store_url=$16,
-         ${uploaded ? "logo_url=$17," : ""} updated_at=now()
-       WHERE id=$15`,
-      uploaded
-        ? [name, category, tagline, description, accentColor, clubComment, raterCount, sortOrder, tags, sc, sv, ss, sr, sse, id, appStoreUrl, uploaded]
-        : [name, category, tagline, description, accentColor, clubComment, raterCount, sortOrder, tags, sc, sv, ss, sr, sse, id, appStoreUrl],
-    )
+
+    if (uploaded) {
+      // 로고도 함께 업데이트
+      await getPool().query(
+        `UPDATE apps
+         SET name=$1, category=$2, tagline=$3, description=$4, accent_color=$5,
+             club_comment=$6, rater_count=$7, sort_order=$8, tags=$9::jsonb,
+             score_convenience=$10, score_variety=$11, score_speed=$12,
+             score_readability=$13, score_security=$14,
+             app_store_url=$15, logo_url=$16,
+             updated_at=now()
+         WHERE id=$17`,
+        [name, category, tagline, description, accentColor, clubComment, raterCount, sortOrder, tags,
+         sc, sv, ss, sr, sse, appStoreUrl, uploaded, id],
+      )
+    } else {
+      // 로고 제외 업데이트
+      await getPool().query(
+        `UPDATE apps
+         SET name=$1, category=$2, tagline=$3, description=$4, accent_color=$5,
+             club_comment=$6, rater_count=$7, sort_order=$8, tags=$9::jsonb,
+             score_convenience=$10, score_variety=$11, score_speed=$12,
+             score_readability=$13, score_security=$14,
+             app_store_url=$15, updated_at=now()
+         WHERE id=$16`,
+        [name, category, tagline, description, accentColor, clubComment, raterCount, sortOrder, tags,
+         sc, sv, ss, sr, sse, appStoreUrl, id],
+      )
+    }
   } else {
+    // 새 앱 추가
     await getPool().query(
-      `INSERT INTO apps (name, category, tagline, description, accent_color, club_comment, rater_count, sort_order, tags,
-         score_convenience, score_variety, score_speed, score_readability, score_security, logo_url, app_store_url)
+      `INSERT INTO apps
+         (name, category, tagline, description, accent_color, club_comment, rater_count,
+          sort_order, tags, score_convenience, score_variety, score_speed,
+          score_readability, score_security, logo_url, app_store_url)
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9::jsonb,$10,$11,$12,$13,$14,$15,$16)`,
-      [name, category, tagline, description, accentColor, clubComment, raterCount, sortOrder, tags, sc, sv, ss, sr, sse, uploaded, appStoreUrl],
+      [name, category, tagline, description, accentColor, clubComment, raterCount, sortOrder, tags,
+       sc, sv, ss, sr, sse, uploaded, appStoreUrl],
     )
   }
   revalidateAll()
@@ -163,17 +186,28 @@ export async function saveInsight(formData: FormData) {
       const prev = await getPool().query("SELECT image_url FROM insights WHERE id = $1", [id])
       await safeDelBlob(prev.rows[0]?.image_url ?? null)
     }
-    await getPool().query(
-      `UPDATE insights SET type=$1, category=$2, title=$3, summary=$4, body=$5, author=$6,
-         published_on=$7, sort_order=$8 ${uploaded ? ", image_url=$10" : ""}
-       WHERE id=$9`,
-      uploaded
-        ? [type, category, title, summary, body, author, publishedOn || null, sortOrder, id, uploaded]
-        : [type, category, title, summary, body, author, publishedOn || null, sortOrder, id],
-    )
+
+    if (uploaded) {
+      await getPool().query(
+        `UPDATE insights
+         SET type=$1, category=$2, title=$3, summary=$4, body=$5, author=$6,
+             published_on=$7, sort_order=$8, image_url=$9
+         WHERE id=$10`,
+        [type, category, title, summary, body, author, publishedOn || null, sortOrder, uploaded, id],
+      )
+    } else {
+      await getPool().query(
+        `UPDATE insights
+         SET type=$1, category=$2, title=$3, summary=$4, body=$5, author=$6,
+             published_on=$7, sort_order=$8
+         WHERE id=$9`,
+        [type, category, title, summary, body, author, publishedOn || null, sortOrder, id],
+      )
+    }
   } else {
     await getPool().query(
-      `INSERT INTO insights (type, category, title, summary, body, author, published_on, sort_order, image_url)
+      `INSERT INTO insights
+         (type, category, title, summary, body, author, published_on, sort_order, image_url)
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
       [type, category, title, summary, body, author, publishedOn || null, sortOrder, uploaded],
     )
@@ -189,4 +223,27 @@ export async function deleteInsight(formData: FormData) {
   await safeDelBlob(prev.rows[0]?.image_url ?? null)
   await getPool().query("DELETE FROM insights WHERE id = $1", [id])
   revalidateAll()
+}
+
+/* ---------------- site settings ---------------- */
+
+export async function saveSiteSettings(formData: FormData) {
+  await requireAuth()
+
+  const heroTitle = str(formData.get("hero_title")) || "대학생이 직접 써본\n모바일 금융앱은\n어땠을까?"
+  const heroSubtitle = str(formData.get("hero_subtitle")) || "금융 동아리 MFS가 5가지 기준으로 솔직하게 평가한 핀테크·은행 앱 랭킹"
+  const clubIntroTitle = str(formData.get("club_intro_title")) || "우리는 MFS 연구회입니다"
+  const clubIntroBody = str(formData.get("club_intro_body")) || ""
+  const memberCount = num(formData.get("member_count"), 14)
+
+  await getPool().query(
+    `UPDATE site_settings
+     SET hero_title=$1, hero_subtitle=$2, club_intro_title=$3, club_intro_body=$4,
+         member_count=$5, updated_at=now()
+     WHERE id=1`,
+    [heroTitle, heroSubtitle, clubIntroTitle, clubIntroBody, memberCount],
+  )
+
+  revalidatePath("/")
+  revalidatePath("/admin")
 }

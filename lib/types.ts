@@ -67,6 +67,27 @@ export const CRITERIA: Criterion[] = [
   { key: "security",    label: "보안성", field: "score_security",    score: "score_security" },
 ]
 
+export type SiteSettings = {
+  id: number
+  hero_title: string
+  hero_subtitle: string
+  club_intro_title: string
+  club_intro_body: string
+  member_count: number
+  updated_at: string
+}
+
+export const DEFAULT_SITE_SETTINGS: SiteSettings = {
+  id: 1,
+  hero_title: "대학생이 직접 써본\n모바일 금융앱은\n어땠을까?",
+  hero_subtitle: "금융 동아리 MFS가 5가지 기준으로 솔직하게 평가한 핀테크·은행 앱 랭킹",
+  club_intro_title: "우리는 MFS 연구회입니다",
+  club_intro_body:
+    "Mobile Financial Service 연구회는 모바일 금융 서비스를 직접 사용하고 분석하는 서경대학교 금융 동아리입니다. 모든 평가는 멤버들이 실제로 앱을 써본 경험을 바탕으로 합니다.",
+  member_count: 14,
+  updated_at: "",
+}
+
 export function formatDate(value: string | null): string {
   if (!value) return ""
   const d = new Date(value)
