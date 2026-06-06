@@ -15,8 +15,10 @@ export async function createSession() {
   const store = await cookies()
   store.set(COOKIE_NAME, VALID_TOKEN, {
     httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
+    // v0 프리뷰는 iframe(cross-site) 환경이라 SameSite=None + Secure 여야
+    // 로그인 이후 Server Action(POST) 요청에도 쿠키가 함께 전송된다.
+    sameSite: "none",
+    secure: true,
     path: "/",
     maxAge: 60 * 60 * 24 * 30, // 30일
   })
