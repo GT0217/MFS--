@@ -155,6 +155,7 @@ export default async function HomePage() {
               src="/mfs-team.jpeg"
               alt="서경대학교 MFS 연구회 멤버들이 단체 배너를 들고 찍은 단체 사진"
               fill
+              priority
               sizes="(max-width: 448px) 100vw, 448px"
               className="object-cover"
             />
