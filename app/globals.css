@@ -21,18 +21,17 @@
 
 /* ── Dark mode overrides ── */
 .dark {
-  --color-background: #000000;
-  --color-foreground: #f5f5f5;
-  --color-card: #111111;
-  --color-card-foreground: #f5f5f5;
-  --color-muted: #1a1a1a;
-  --color-muted-foreground: #a3a3a3;
-  --color-border: #2a2a2a;
-  --color-primary: #16c95a;
-  --color-primary-foreground: #000000;
+  --color-background: #0f172a;
+  --color-foreground: #f1f5f9;
+  --color-card: #1e293b;
+  --color-card-foreground: #f1f5f9;
+  --color-muted: #1e293b;
+  --color-muted-foreground: #94a3b8;
+  --color-border: #334155;
+  --color-primary: #14bb51;
+  --color-primary-foreground: #ffffff;
   --color-primary-dark: #0f9a42;
-  --color-accent: #16c95a;
-  --color-ring: #16c95a;
+  --color-ring: #14bb51;
 }
 
 /* ── Text size ── */
