@@ -37,9 +37,13 @@ async function maybeUpload(file: FormDataEntryValue | null): Promise<string | nu
   if (!file || typeof file === "string") return null
   const f = file as File
   if (!f.size) return null
-  const ext = f.name.split(".").pop() || "png"
-  const blob = await put(`mfs/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`, f, {
+  // 확장자 안전 처리: 일부 모바일 카메라는 .jpeg/.heic 등을 사용
+  const rawExt = (f.name.split(".").pop() || "").toLowerCase()
+  const ext = rawExt && rawExt.length <= 5 ? rawExt : "jpg"
+  const key = `mfs/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
+  const blob = await put(key, f, {
     access: "public",
+    contentType: f.type || "image/jpeg",
   })
   return blob.url
 }
