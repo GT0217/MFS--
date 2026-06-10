@@ -20,10 +20,10 @@ export default async function HomePage() {
       {/* Hero */}
       <header
         className="relative overflow-hidden px-5 pb-12 pt-14 text-white"
-        style={{ background: "linear-gradient(135deg, #0b7a33 0%, #0f9a42 50%, #14bb51 100%)" }}
+        style={{ background: "linear-gradient(135deg, var(--color-hero-from) 0%, var(--color-hero-to) 100%)" }}
       >
         <div
-          className="absolute -right-16 -top-16 h-56 w-56 rounded-full bg-[#0ee912]/25 blur-2xl"
+          className="absolute -right-16 -top-16 h-56 w-56 rounded-full bg-white/10 blur-2xl"
           aria-hidden="true"
         />
         <div className="relative">
@@ -65,7 +65,7 @@ export default async function HomePage() {
               href={`/ranking/${app.id}`}
               className="relative flex w-60 shrink-0 snap-start flex-col justify-between overflow-hidden rounded-[24px] p-5 text-white shadow-lg transition-transform active:scale-[0.98]"
               style={{
-                background: `linear-gradient(150deg, ${app.accent_color}, #0b7a33)`,
+                background: `linear-gradient(150deg, ${app.accent_color}, var(--color-hero-from))`,
                 minHeight: 196,
               }}
             >
@@ -105,7 +105,8 @@ export default async function HomePage() {
       <section className="px-5 pt-6">
         <Link
           href="/recommend"
-          className="group relative flex items-center gap-3 overflow-hidden rounded-[20px] bg-gradient-to-r from-[#0f9a42] to-[#14bb51] p-4 text-white shadow-sm transition-transform active:scale-[0.99]"
+          className="group relative flex items-center gap-3 overflow-hidden rounded-[20px] p-4 text-white shadow-sm transition-transform active:scale-[0.99]"
+          style={{ background: "linear-gradient(135deg, var(--color-hero-from), var(--color-hero-to))" }}
         >
           <span className="flex h-11 w-11 items-center justify-center rounded-full bg-white/20">
             <Sparkles className="h-5 w-5" aria-hidden="true" />
