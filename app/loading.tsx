@@ -4,7 +4,7 @@ export default function HomeLoading() {
       {/* Hero skeleton - 실제 히어로와 동일한 그라데이션으로 깜빡임 방지 */}
       <header
         className="relative overflow-hidden px-5 pb-12 pt-14 text-white"
-        style={{ background: "linear-gradient(135deg, #0b7a33 0%, #0f9a42 50%, #14bb51 100%)" }}
+        style={{ background: "linear-gradient(135deg, var(--color-hero-from) 0%, var(--color-hero-to) 100%)" }}
       >
         <div className="relative">
           <div className="h-6 w-40 rounded-full bg-white/20" />

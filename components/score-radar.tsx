@@ -50,9 +50,9 @@ export function ScoreRadar({ app }: { app: AppWithScore }) {
           />
           <Radar
             dataKey="value"
-            stroke="#14bb51"
-            fill="#14bb51"
-            fillOpacity={0.3}
+            stroke="var(--color-primary)"
+            fill="var(--color-primary)"
+            fillOpacity={0.25}
             strokeWidth={2}
           />
         </RadarChart>
