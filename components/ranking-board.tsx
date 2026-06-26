@@ -29,8 +29,8 @@ export function RankingBoard({ apps }: { apps: AppWithScore[] }) {
               onClick={() => setActive(c)}
               className={`shrink-0 rounded-full px-4 py-2 text-sm font-semibold transition-colors ${
                 isActive
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-card text-muted-foreground ring-1 ring-border"
+                  ? "bg-primary text-primary-foreground shadow-sm"
+                  : "bg-card text-muted-foreground shadow-sm dark:bg-zinc-800"
               }`}
             >
               {c.label}
@@ -48,23 +48,23 @@ export function RankingBoard({ apps }: { apps: AppWithScore[] }) {
             <li key={app.id}>
               <Link
                 href={`/ranking/${app.id}`}
-                className="flex items-center gap-3 rounded-2xl bg-card p-3 shadow-sm ring-1 ring-border"
+                className="flex items-center gap-3 rounded-3xl bg-card p-4 shadow-sm transition-transform active:scale-[0.98] dark:bg-zinc-800"
               >
                 <span
                   className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-bold ${
-                    rank <= 3 ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
+                    rank <= 3 ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground dark:bg-zinc-700"
                   }`}
                 >
                   {rank}
                 </span>
-                <AppLogo app={app} size={40} />
+                <AppLogo app={app} size={42} />
                 <div className="min-w-0 flex-1">
                   <p className="truncate font-bold">{app.name}</p>
                   <p className="truncate text-xs text-muted-foreground">{app.category}</p>
                 </div>
                 <div className="text-right">
                   <p className="text-[11px] text-muted-foreground">{active.label}</p>
-                  <p className="text-lg font-bold text-primary">{score.toFixed(1)}</p>
+                  <p className="text-xl font-bold text-primary">{score.toFixed(1)}</p>
                 </div>
                 <ChevronRight className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
               </Link>

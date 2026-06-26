@@ -50,7 +50,7 @@ export default function RootLayout({
           }}
         />
         <ServiceWorkerRegister />
-        <div className="relative mx-auto flex min-h-dvh w-full max-w-md flex-col bg-background">
+        <div className="relative mx-auto flex min-h-dvh w-full max-w-md flex-col bg-background dark:bg-black">
           <SettingsMenu />
           <main className="flex-1 pb-24">{children}</main>
           <BottomNav />

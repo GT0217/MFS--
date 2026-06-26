@@ -3,41 +3,45 @@
 @theme inline {
   --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
 
-  /* Light mode — premium lime-green */
-  --color-background: #f7faf2;
-  --color-foreground: #1a2412;
+  /* Light mode */
+  --color-background: #f4f6f3;
+  --color-foreground: #111827;
   --color-card: #ffffff;
-  --color-card-foreground: #1a2412;
-  --color-muted: #eff5e6;
-  --color-muted-foreground: #5a6b4a;
-  --color-border: #dce8cc;
-  --color-primary: #7bc144;
-  --color-primary-foreground: #0d1a05;
-  --color-primary-dark: #65a832;
-  --color-accent: #b0e06a;
-  --color-hero-from: #2e6b12;
-  --color-hero-to: #4a9a22;
-  --color-ring: #7bc144;
+  --color-card-foreground: #111827;
+  --color-muted: #f0f2ee;
+  --color-muted-foreground: #6b7280;
+  --color-border: #e5e7eb;
+  --color-primary: #5ba832;
+  --color-primary-foreground: #ffffff;
+  --color-primary-dark: #4a9028;
+  --color-accent: #84cc16;
+  --color-hero-from: #1a3a0a;
+  --color-hero-to: #2d6016;
+  --color-action: #2563eb;
+  --color-action-foreground: #ffffff;
+  --color-ring: #5ba832;
 
   --radius: 1rem;
 }
 
-/* ── Dark mode — pure black base ── */
+/* ── Dark mode — pure black ── */
 .dark {
   --color-background: #000000;
-  --color-foreground: #eef5e6;
-  --color-card: #0d100c;
-  --color-card-foreground: #eef5e6;
-  --color-muted: #151a13;
-  --color-muted-foreground: #8fa882;
-  --color-border: #1e2a1a;
-  --color-primary: #90d455;
-  --color-primary-foreground: #071003;
-  --color-primary-dark: #7bc144;
-  --color-accent: #b8e87a;
-  --color-hero-from: #1a3d08;
-  --color-hero-to: #2a5e12;
-  --color-ring: #90d455;
+  --color-foreground: #f9fafb;
+  --color-card: #18181b;
+  --color-card-foreground: #f9fafb;
+  --color-muted: #27272a;
+  --color-muted-foreground: #a1a1aa;
+  --color-border: #3f3f46;
+  --color-primary: #84cc16;
+  --color-primary-foreground: #052e16;
+  --color-primary-dark: #5ba832;
+  --color-accent: #a3e635;
+  --color-hero-from: #0f1f06;
+  --color-hero-to: #1a3a0a;
+  --color-action: #3b82f6;
+  --color-action-foreground: #ffffff;
+  --color-ring: #84cc16;
 }
 
 /* ── Text size ── */
@@ -49,14 +53,19 @@ html.text-large {
   -webkit-tap-highlight-color: transparent;
 }
 
-html {
-  background-color: var(--color-background);
-}
-
+html,
 body {
   background-color: var(--color-background);
   color: var(--color-foreground);
   -webkit-font-smoothing: antialiased;
+}
+
+/* Force dark backgrounds on key containers */
+.dark body,
+.dark #__next,
+.dark [data-nextjs-scroll-focus-boundary] {
+  background-color: #000000;
+  color: #f9fafb;
 }
 
 /* Hide scrollbar for horizontal carousels */

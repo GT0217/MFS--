@@ -128,7 +128,7 @@ export function RecommendQuiz({ apps }: { apps: AppWithScore[] }) {
 
   if (!started) {
     return (
-      <div className="flex flex-col items-center rounded-3xl bg-card p-8 text-center shadow-sm ring-1 ring-border">
+      <div className="flex flex-col items-center rounded-3xl bg-card p-8 text-center shadow-md dark:bg-zinc-800">
         <span className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-primary">
           <Sparkles className="h-7 w-7" aria-hidden="true" />
         </span>
@@ -139,7 +139,7 @@ export function RecommendQuiz({ apps }: { apps: AppWithScore[] }) {
         <button
           type="button"
           onClick={() => setStarted(true)}
-          className="mt-6 w-full rounded-2xl bg-primary py-3.5 text-sm font-bold text-primary-foreground"
+          className="mt-6 w-full rounded-2xl bg-blue-600 py-4 text-sm font-bold text-white shadow-sm transition-transform active:scale-[0.98]"
         >
           시작하기
         </button>
@@ -266,7 +266,7 @@ export function RecommendQuiz({ apps }: { apps: AppWithScore[] }) {
             <button
               type="button"
               onClick={() => choose(opt.weight)}
-              className="flex w-full items-center justify-between rounded-2xl bg-card p-4 text-left text-sm font-semibold shadow-sm ring-1 ring-border transition-colors hover:ring-primary active:bg-muted"
+              className="flex w-full items-center justify-between rounded-3xl bg-card p-4 text-left text-sm font-semibold shadow-sm transition-colors active:bg-muted active:scale-[0.98] dark:bg-zinc-800"
             >
               {opt.label}
               <ChevronRight className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
