@@ -187,7 +187,7 @@ export function InsightTabs({ insights }: { insights: Insight[] }) {
       {/* 칼럼 리스트 - 썸네일 + 정보 */}
       <div className="mt-4 grid gap-4">
         {filtered.length === 0 ? (
-          <div className="rounded-2xl bg-card p-8 text-center text-sm text-muted-foreground ring-1 ring-border">
+          <div className="rounded-3xl bg-card p-8 text-center text-sm text-muted-foreground shadow-sm dark:bg-zinc-800">
             아직 등록된 글이 없습니다.
           </div>
         ) : (
@@ -196,7 +196,7 @@ export function InsightTabs({ insights }: { insights: Insight[] }) {
               key={insight.id}
               type="button"
               onClick={() => setSelectedIndex(idx)}
-              className="group overflow-hidden rounded-2xl bg-card shadow-sm ring-1 ring-border transition-all hover:shadow-md hover:ring-border/80 active:shadow-none"
+              className="group overflow-hidden rounded-3xl bg-card shadow-sm transition-all active:scale-[0.99] active:shadow-none dark:bg-zinc-800"
             >
               <div className="flex gap-4 p-4">
                 {/* 썸네일 */}

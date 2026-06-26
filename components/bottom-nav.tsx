@@ -17,7 +17,7 @@ export function BottomNav() {
   if (pathname.startsWith("/admin")) return null
 
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-40 mx-auto w-full max-w-md border-t border-border bg-card/95 backdrop-blur">
+    <nav className="fixed inset-x-0 bottom-0 z-40 mx-auto w-full max-w-md bg-card/95 shadow-[0_-1px_0_0_rgba(0,0,0,0.08)] backdrop-blur dark:bg-zinc-900/95 dark:shadow-[0_-1px_0_0_rgba(255,255,255,0.06)]">
       <ul className="flex items-stretch justify-around px-2 py-2">
         {TABS.map((tab) => {
           const active = tab.href === "/" ? pathname === "/" : pathname.startsWith(tab.href)
