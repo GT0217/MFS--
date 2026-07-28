@@ -51,7 +51,7 @@ export default async function HomePage() {
               </span>
             ))}
           </h1>
-          <p className="mt-3 max-w-[18rem] text-pretty text-[15px] leading-relaxed text-white/80">
+          <p className="mt-3 max-w-[18rem] text-[15px] leading-relaxed text-white/80 whitespace-pre-line">
             {settings.hero_subtitle}
           </p>
 
