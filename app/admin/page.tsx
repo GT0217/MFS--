@@ -1,6 +1,6 @@
 import Link from "next/link"
 import { isAuthenticated, isAdminConfigured } from "@/lib/auth"
-import { getApps, getInsights, getSiteSettings } from "@/lib/db"
+import { getApps, getInsights, getSiteSettings, getInsightCategories } from "@/lib/db"
 import { LoginForm } from "@/components/login-form"
 import { AdminDashboard } from "@/components/admin-dashboard"
 import { LogoutButton } from "@/components/logout-button"
@@ -48,6 +48,11 @@ export default async function AdminPage() {
 }
 
 async function AuthedView() {
-  const [apps, insights, siteSettings] = await Promise.all([getApps(), getInsights(), getSiteSettings()])
-  return <AdminDashboard apps={apps} insights={insights} siteSettings={siteSettings} />
+  const [apps, insights, siteSettings, categories] = await Promise.all([
+    getApps(),
+    getInsights(),
+    getSiteSettings(),
+    getInsightCategories(),
+  ])
+  return <AdminDashboard apps={apps} insights={insights} siteSettings={siteSettings} categories={categories} />
 }

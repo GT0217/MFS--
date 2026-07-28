@@ -23,6 +23,15 @@ export type App = {
 
 export type AppWithScore = App & { overall: number }
 
+// DB에서 동적으로 불러오는 카테고리 행 타입
+export type InsightCategoryRow = {
+  id: number
+  name: string
+  sort_order: number
+  created_at: string
+}
+
+// 하드코딩 폴백 (DB 연결 실패 시 사용)
 export const INSIGHT_CATEGORIES = [
   { value: "국내 뱅킹 앱 분석", label: "국내 뱅킹 앱 분석" },
   { value: "해외 뱅킹 앱 분석", label: "해외 뱅킹 앱 분석" },

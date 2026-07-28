@@ -1,5 +1,5 @@
 import { Lightbulb } from "lucide-react"
-import { getInsights } from "@/lib/db"
+import { getInsights, getInsightCategories } from "@/lib/db"
 import { InsightTabs } from "@/components/insight-tabs"
 import { PageHeader } from "@/components/page-header"
 
@@ -10,7 +10,11 @@ export default async function InsightsPage({
 }: {
   searchParams: Promise<{ tab?: string }>
 }) {
-  const [insights, params] = await Promise.all([getInsights(), searchParams])
+  const [insights, categories, params] = await Promise.all([
+    getInsights(),
+    getInsightCategories(),
+    searchParams,
+  ])
   const initialTab = params.tab
 
   return (
@@ -18,15 +22,11 @@ export default async function InsightsPage({
       <PageHeader
         icon={Lightbulb}
         eyebrow="INSIGHTS"
-        title={initialTab === "대외활동" ? "대외활동" : "인사이트"}
-        description={
-          initialTab === "대외활동"
-            ? "동아리 대외활동 및 공모전 참여 기록"
-            : "동아리 분석 칼럼과 카드뉴스 소재"
-        }
+        title="인사이트"
+        description="동아리 분석 칼럼과 카드뉴스 소재"
       />
       <div className="px-5">
-        <InsightTabs insights={insights} initialTab={initialTab} />
+        <InsightTabs insights={insights} categories={categories} initialTab={initialTab} />
       </div>
     </div>
   )

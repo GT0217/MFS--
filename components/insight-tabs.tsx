@@ -1,18 +1,14 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { FileText, BarChart2, Globe, Layout, Megaphone, ChevronLeft, ChevronRight, Download } from "lucide-react"
-import type { Insight } from "@/lib/types"
-import { formatDate } from "@/lib/types"
+import { FileText, ChevronLeft, ChevronRight, Download } from "lucide-react"
+import type { Insight, InsightCategoryRow } from "@/lib/types"
+import { formatDate, INSIGHT_CATEGORIES } from "@/lib/types"
 
-const TABS = [
-  { key: "국내 뱅킹 앱 분석", label: "국내 분석", icon: BarChart2 },
-  { key: "해외 뱅킹 앱 분석", label: "해외 분석", icon: Globe },
-  { key: "카드뉴스 소재", label: "카드뉴스", icon: Layout },
-  { key: "대외활동", label: "대외활동", icon: Megaphone },
-] as const
+// 폴백용 하드코딩 탭
+const FALLBACK_TABS = INSIGHT_CATEGORIES.map((c) => ({ key: c.value, label: c.label }))
 
-type TabKey = (typeof TABS)[number]["key"]
+type TabKey = string
 
 function isPdf(url: string) {
   return url.toLowerCase().includes(".pdf") || url.toLowerCase().includes("application/pdf")
@@ -182,9 +178,22 @@ function InsightViewer({
   )
 }
 
-export function InsightTabs({ insights, initialTab }: { insights: Insight[]; initialTab?: string }) {
-  const validInitial = TABS.find((t) => t.key === initialTab)?.key ?? "국내 뱅킹 앱 분석"
-  const [tab, setTab] = useState<TabKey>(validInitial as TabKey)
+export function InsightTabs({
+  insights,
+  categories,
+  initialTab,
+}: {
+  insights: Insight[]
+  categories?: InsightCategoryRow[]
+  initialTab?: string
+}) {
+  // DB 카테고리 → 탭 배열, 없으면 폴백
+  const tabs = (categories && categories.length > 0)
+    ? categories.map((c) => ({ key: c.name, label: c.name }))
+    : FALLBACK_TABS
+
+  const validInitial = tabs.find((t) => t.key === initialTab)?.key ?? tabs[0]?.key ?? ""
+  const [tab, setTab] = useState<TabKey>(validInitial)
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null)
 
   const filtered = insights.filter((i) => i.category === tab)
@@ -201,19 +210,17 @@ export function InsightTabs({ insights, initialTab }: { insights: Insight[]; ini
     <div>
       {/* 탭 버튼 — 3종 카테고리 */}
       <div className="flex gap-1 overflow-x-auto no-scrollbar">
-        {TABS.map((t) => {
-          const Icon = t.icon
+        {tabs.map((t) => {
           const active = tab === t.key
           return (
             <button
               key={t.key}
               type="button"
               onClick={() => { setTab(t.key); setSelectedIndex(null) }}
-              className={`flex shrink-0 items-center gap-1.5 rounded-full px-4 py-2 text-sm font-semibold transition-colors ${
+              className={`flex shrink-0 items-center rounded-full px-4 py-2 text-sm font-semibold transition-colors ${
                 active ? "bg-primary text-primary-foreground shadow-sm" : "bg-muted text-muted-foreground"
               }`}
             >
-              <Icon className="h-3.5 w-3.5" aria-hidden="true" />
               {t.label}
             </button>
           )

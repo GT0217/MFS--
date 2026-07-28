@@ -1,6 +1,6 @@
 import "server-only"
 import { Pool } from "pg"
-import { type App, type AppWithScore, type Insight, type SiteSettings, DEFAULT_SITE_SETTINGS, overallScore } from "./types"
+import { type App, type AppWithScore, type Insight, type InsightCategoryRow, type SiteSettings, DEFAULT_SITE_SETTINGS, overallScore, INSIGHT_CATEGORIES } from "./types"
 
 export * from "./types"
 
@@ -50,6 +50,31 @@ export async function getInsights(): Promise<Insight[]> {
     ...r,
     image_urls: Array.isArray(r.image_urls) ? r.image_urls : [],
   }))
+}
+
+export async function getInsightCategories(): Promise<InsightCategoryRow[]> {
+  try {
+    const { rows } = await getPool().query<InsightCategoryRow>(
+      "SELECT * FROM insight_categories ORDER BY sort_order ASC, id ASC",
+    )
+    // DB가 비어있으면 하드코딩 폴백 반환
+    if (rows.length === 0) {
+      return INSIGHT_CATEGORIES.map((c, i) => ({
+        id: i + 1,
+        name: c.value,
+        sort_order: i,
+        created_at: "",
+      }))
+    }
+    return rows
+  } catch {
+    return INSIGHT_CATEGORIES.map((c, i) => ({
+      id: i + 1,
+      name: c.value,
+      sort_order: i,
+      created_at: "",
+    }))
+  }
 }
 
 export async function getSiteSettings(): Promise<SiteSettings> {
