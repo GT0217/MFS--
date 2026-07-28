@@ -306,7 +306,7 @@ export function InsightTabs({
                 key={insight.id}
                 type="button"
                 onClick={() => setSelectedIndex(idx)}
-                className="group overflow-hidden rounded-3xl bg-card shadow-sm transition-all active:scale-[0.99] active:shadow-none text-left"
+                className="group overflow-hidden rounded-3xl bg-card shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg active:scale-[0.99] active:shadow-none active:translate-y-0 text-left"
               >
                 <div className="flex gap-4 p-4">
                   {/* 썸네일 */}

@@ -54,6 +54,13 @@ html.text-large {
   -webkit-tap-highlight-color: transparent;
 }
 
+/* 모든 버튼/링크에 부드러운 색상 전환 */
+button, a {
+  transition-property: color, background-color, border-color, opacity, box-shadow, transform;
+  transition-duration: 200ms;
+  transition-timing-function: ease-in-out;
+}
+
 html,
 body {
   background-color: var(--color-background);

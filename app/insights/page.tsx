@@ -23,7 +23,6 @@ export default async function InsightsPage({
         icon={Lightbulb}
         eyebrow="INSIGHTS"
         title="인사이트"
-        description="동아리 분석 칼럼과 카드뉴스 소재"
       />
       <div className="px-5">
         <InsightTabs insights={insights} categories={categories} initialTab={initialTab} />

@@ -128,18 +128,15 @@ export function RecommendQuiz({ apps }: { apps: AppWithScore[] }) {
 
   if (!started) {
     return (
-      <div className="flex flex-col items-center rounded-3xl bg-card p-8 text-center shadow-md dark:bg-zinc-800">
+      <div className="flex flex-col items-center rounded-3xl bg-card p-8 text-center shadow-md">
         <span className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-primary">
           <Sparkles className="h-7 w-7" aria-hidden="true" />
         </span>
-        <h2 className="mt-4 text-lg font-bold">나에게 맞는 금융앱 찾기</h2>
-        <p className="mt-2 text-sm text-muted-foreground">
-          4개의 질문에 답하면 AI가 가장 잘 맞는 앱을 추천해드려요.
-        </p>
+        <h2 className="mt-5 text-xl font-bold leading-snug">나에게 맞는 금융앱 찾기</h2>
         <button
           type="button"
           onClick={() => setStarted(true)}
-          className="mt-6 w-full rounded-2xl bg-blue-600 py-4 text-sm font-bold text-white shadow-sm transition-transform active:scale-[0.98]"
+          className="mt-8 w-full rounded-2xl bg-primary py-4 text-sm font-bold text-primary-foreground shadow-sm transition-all duration-200 hover:opacity-90 active:scale-[0.98]"
         >
           시작하기
         </button>
