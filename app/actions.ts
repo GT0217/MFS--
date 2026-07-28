@@ -243,13 +243,30 @@ export async function saveSiteSettings(formData: FormData) {
   const clubIntroBody = str(formData.get("club_intro_body")) || ""
   const memberCount = num(formData.get("member_count"), 14)
 
-  await getPool().query(
-    `UPDATE site_settings
-     SET hero_title=$1, hero_subtitle=$2, club_intro_title=$3, club_intro_body=$4,
-         member_count=$5, updated_at=now()
-     WHERE id=1`,
-    [heroTitle, heroSubtitle, clubIntroTitle, clubIntroBody, memberCount],
-  )
+  // 히어로 배경 이미지 업로드
+  const uploadedHeroImage = await maybeUpload(formData.get("hero_image"))
+
+  if (uploadedHeroImage) {
+    // 기존 이미지 삭제
+    const prev = await getPool().query("SELECT hero_image_url FROM site_settings WHERE id = 1")
+    await safeDelBlob(prev.rows[0]?.hero_image_url ?? null)
+
+    await getPool().query(
+      `UPDATE site_settings
+       SET hero_title=$1, hero_subtitle=$2, club_intro_title=$3, club_intro_body=$4,
+           member_count=$5, hero_image_url=$6, updated_at=now()
+       WHERE id=1`,
+      [heroTitle, heroSubtitle, clubIntroTitle, clubIntroBody, memberCount, uploadedHeroImage],
+    )
+  } else {
+    await getPool().query(
+      `UPDATE site_settings
+       SET hero_title=$1, hero_subtitle=$2, club_intro_title=$3, club_intro_body=$4,
+           member_count=$5, updated_at=now()
+       WHERE id=1`,
+      [heroTitle, heroSubtitle, clubIntroTitle, clubIntroBody, memberCount],
+    )
+  }
 
   revalidatePath("/")
   revalidatePath("/admin")

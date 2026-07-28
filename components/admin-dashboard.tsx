@@ -359,61 +359,71 @@ function InsightForm({ insight }: { insight?: Insight }) {
 }
 
 function HomeSettingsForm({ settings }: { settings: SiteSettings }) {
+  const [heroPreview, setHeroPreview] = useState<string | null>(settings.hero_image_url ?? null)
+
   return (
     <div className="overflow-hidden rounded-2xl border border-primary/40 bg-card shadow-sm">
       <div className="px-5 py-4">
-        <p className="font-bold text-primary">홈 화면 텍스트 ���정</p>
+        <p className="font-bold text-primary">홈 화면 설정</p>
         <p className="text-xs text-muted-foreground">저장 후 즉시 홈 화면에 반영됩니다.</p>
       </div>
       <div className="border-t border-border px-5 py-5">
         <form action={saveSiteSettings} className="flex flex-col gap-5">
+          {/* 히어로 섹션 */}
           <div className="rounded-xl bg-muted/50 p-4">
             <p className="mb-3 text-xs font-semibold text-muted-foreground">히어로 섹션 (상단 배너)</p>
             <div className="flex flex-col gap-4">
+              {/* 배경 이미지 업로더 */}
+              <Field text="배경 사진 (JPG, PNG, WEBP — 권장 가로 900px 이상)">
+                <div className="flex flex-col gap-3">
+                  {heroPreview && (
+                    <div className="relative h-36 w-full overflow-hidden rounded-xl border border-border">
+                      <img
+                        src={heroPreview}
+                        alt="히어로 배경 미리보기"
+                        className="h-full w-full object-cover object-center"
+                      />
+                      <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-b from-black/50 to-black/70">
+                        <span className="text-xs font-semibold text-white/80">미리보기</span>
+                      </div>
+                    </div>
+                  )}
+                  <input
+                    type="file"
+                    name="hero_image"
+                    accept="image/jpeg,image/jpg,image/png,image/webp"
+                    onChange={(e) => {
+                      const f = e.target.files?.[0]
+                      if (f) setHeroPreview(URL.createObjectURL(f))
+                    }}
+                    className="text-sm file:mr-3 file:rounded-lg file:border-0 file:bg-muted file:px-3 file:py-2 file:text-sm file:font-medium"
+                  />
+                  <p className="text-[11px] text-muted-foreground">
+                    파일을 선택하지 않으면 기존 사진이 유지됩니다.
+                  </p>
+                </div>
+              </Field>
               <Field text="메인 제목 (줄바꿈: Enter 키)">
-                <textarea
-                  name="hero_title"
-                  defaultValue={settings.hero_title}
-                  rows={3}
-                  className={input}
-                />
+                <textarea name="hero_title" defaultValue={settings.hero_title} rows={3} className={input} />
               </Field>
               <Field text="부제 (히어로 아래 설명 문구)">
-                <textarea
-                  name="hero_subtitle"
-                  defaultValue={settings.hero_subtitle}
-                  rows={2}
-                  className={input}
-                />
+                <textarea name="hero_subtitle" defaultValue={settings.hero_subtitle} rows={2} className={input} />
               </Field>
             </div>
           </div>
 
+          {/* 동아리 소개 섹션 */}
           <div className="rounded-xl bg-muted/50 p-4">
             <p className="mb-3 text-xs font-semibold text-muted-foreground">동아리 소개 섹션 (하단 카드)</p>
             <div className="flex flex-col gap-4">
               <Field text="소개 제목">
-                <input
-                  name="club_intro_title"
-                  defaultValue={settings.club_intro_title}
-                  className={input}
-                />
+                <input name="club_intro_title" defaultValue={settings.club_intro_title} className={input} />
               </Field>
               <Field text="소개 본문">
-                <textarea
-                  name="club_intro_body"
-                  defaultValue={settings.club_intro_body}
-                  rows={4}
-                  className={input}
-                />
+                <textarea name="club_intro_body" defaultValue={settings.club_intro_body} rows={4} className={input} />
               </Field>
               <Field text="활동 멤버 수">
-                <input
-                  name="member_count"
-                  type="number"
-                  defaultValue={settings.member_count}
-                  className={input}
-                />
+                <input name="member_count" type="number" defaultValue={settings.member_count} className={input} />
               </Field>
             </div>
           </div>

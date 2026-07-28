@@ -19,14 +19,15 @@ export default async function HomePage() {
     <div className="pb-4">
       {/* ── Hero ── */}
       <header className="relative min-h-[340px] overflow-hidden">
-        {/* 배경 이미지 */}
+        {/* 배경 이미지 — 관리자에서 업로드한 이미지 우선, 없으면 기본 팀 사진 */}
         <Image
-          src="/mfs-team.jpeg"
+          src={settings.hero_image_url ?? "/mfs-team.jpeg"}
           alt=""
           fill
           priority
           sizes="448px"
-          className="object-cover object-top"
+          className="object-cover object-center"
+          unoptimized={!!settings.hero_image_url}
           aria-hidden="true"
         />
         {/* 진한 오버레이 — 텍스트 가독성 확보 */}
