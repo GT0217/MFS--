@@ -290,14 +290,7 @@ function AppForm({ app }: { app?: AppWithScore }) {
 function InsightForm({ insight }: { insight?: Insight }) {
   const formId = insight ? `insight-${insight.id}` : "insight-new"
   const [bodyHtml, setBodyHtml] = useState<string>(insight?.body ?? "")
-  const [extraPreviews, setExtraPreviews] = useState<string[]>(insight?.image_urls ?? [])
   const [state, baseAction, pending] = useActionState(saveInsight, null)
-
-  function handleExtraFiles(e: React.ChangeEvent<HTMLInputElement>) {
-    const files = Array.from(e.target.files ?? [])
-    const urls = files.map((f) => URL.createObjectURL(f))
-    setExtraPreviews(urls)
-  }
 
   return (
     <div className="flex flex-col gap-4">
@@ -311,7 +304,6 @@ function InsightForm({ insight }: { insight?: Insight }) {
         className="flex flex-col gap-4"
       >
         {insight ? <input type="hidden" name="id" value={insight.id} /> : null}
-        {/* type은 category 값과 동기화 — hidden으로 전달 */}
         <input type="hidden" name="type" value="인사이트" />
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field text="카테고리">
@@ -346,39 +338,14 @@ function InsightForm({ insight }: { insight?: Insight }) {
 
         <ImagePicker name="image" current={insight?.image_url} text="대표 썸네일 이미지" />
 
-        {/* 다중 이미지 업로드 */}
-        <Field text="본문 이미지 (여러 장 선택 가능 — JPG, PNG, WEBP)">
-          <input
-            type="file"
-            name="images"
-            accept="image/jpeg,image/jpg,image/png,image/webp"
-            multiple
-            onChange={handleExtraFiles}
-            className="text-sm file:mr-3 file:rounded-lg file:border-0 file:bg-muted file:px-3 file:py-2 file:text-sm file:font-medium"
-          />
-          {extraPreviews.length > 0 && (
-            <div className="mt-2 flex flex-wrap gap-2">
-              {extraPreviews.map((url, i) => (
-                <img
-                  key={i}
-                  src={url}
-                  alt={`미리보기 ${i + 1}`}
-                  className="h-20 w-20 rounded-lg object-cover border border-border"
-                />
-              ))}
-            </div>
-          )}
-        </Field>
-
-        {/* 리치 텍스트 에디터 */}
-        <Field text="본문 (굵게·기울임·목록 지원)">
+        {/* 본문 에디터 — 툴바의 이미지 버튼으로 원하는 위치에 이미지 삽입 */}
+        <Field text="본문 (툴바의 이미지 버튼으로 원하는 위치에 사진 삽입 가능)">
           <RichTextEditor
             value={bodyHtml}
             onChange={setBodyHtml}
-            placeholder="본문 내용을 ��력하세요..."
+            placeholder="본문 내용을 입력하고, 툴바의 🖼 버튼으로 이미지를 삽입하세요..."
           />
         </Field>
-        {/* hidden body — form action에서 덮어씌움 */}
         <input type="hidden" name="body" value={bodyHtml} />
       </form>
 

@@ -69,6 +69,27 @@ body {
   color: #f9fafb;
 }
 
+/* Prose (rich-text viewer) — inline image 반응형 */
+.prose img {
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  display: block;
+  border-radius: 1rem;
+  margin-top: 1.5rem;
+  margin-bottom: 1.5rem;
+  object-fit: cover;
+}
+
+/* Quill 에디터 내 이미지도 넘치지 않도록 */
+.ql-editor img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 0.5rem;
+  margin: 0.75rem 0;
+  display: block;
+}
+
 /* Quill editor overrides */
 .ql-toolbar {
   border-color: var(--color-border) !important;

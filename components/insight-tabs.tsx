@@ -132,7 +132,12 @@ function InsightViewer({
           {insight.body ? (
             isHtmlBody ? (
               <div
-                className="prose prose-sm max-w-none leading-8"
+                className="prose prose-sm max-w-none leading-8
+                  prose-img:w-full prose-img:max-w-full prose-img:rounded-2xl
+                  prose-img:my-6 prose-img:object-cover prose-img:block
+                  prose-p:break-words prose-p:leading-8
+                  [&_img]:w-full [&_img]:max-w-full [&_img]:rounded-2xl
+                  [&_img]:my-6 [&_img]:h-auto [&_img]:object-cover [&_img]:block"
                 dangerouslySetInnerHTML={{ __html: insight.body }}
               />
             ) : (
