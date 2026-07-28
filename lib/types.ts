@@ -27,6 +27,7 @@ export const INSIGHT_CATEGORIES = [
   { value: "국내 뱅킹 앱 분석", label: "국내 뱅킹 앱 분석" },
   { value: "해외 뱅킹 앱 분석", label: "해외 뱅킹 앱 분석" },
   { value: "카드뉴스 소재", label: "카드뉴스 소재" },
+  { value: "대외활동", label: "대외활동" },
 ] as const
 
 export type InsightCategory = (typeof INSIGHT_CATEGORIES)[number]["value"]
@@ -80,6 +81,7 @@ export type SiteSettings = {
   id: number
   hero_title: string
   hero_subtitle: string
+  hero_image_url: string | null
   club_intro_title: string
   club_intro_body: string
   member_count: number
@@ -90,6 +92,7 @@ export const DEFAULT_SITE_SETTINGS: SiteSettings = {
   id: 1,
   hero_title: "대학생이 직접 써본\n모바일 금융앱은\n어땠을까?",
   hero_subtitle: "금융 동아리 MFS가 5가지 기준으로 솔직하게 평가한 핀테크·은행 앱 랭킹",
+  hero_image_url: null,
   club_intro_title: "우리는 MFS 연구회입니다",
   club_intro_body:
     "Mobile Financial Service 연구회는 모바일 금융 서비스를 직접 사용하고 분석하는 서경대학교 금융 동아리입니다. 모든 평가는 멤버들이 실제로 앱을 써본 경험을 바탕으로 합니다.",

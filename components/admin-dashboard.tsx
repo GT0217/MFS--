@@ -1,14 +1,48 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect, useActionState } from "react"
 import Image from "next/image"
+import { CheckCircle, XCircle } from "lucide-react"
 import { CRITERIA, INSIGHT_CATEGORIES, type AppWithScore, type Insight, type SiteSettings } from "@/lib/types"
-import { saveApp, deleteApp, saveInsight, deleteInsight, saveSiteSettings } from "@/app/actions"
+import { saveApp, deleteApp, saveInsight, deleteInsight, saveSiteSettings, type SaveState } from "@/app/actions"
 import { RichTextEditor } from "@/components/rich-text-editor"
 import "react-quill-new/dist/quill.snow.css"
 
 const input =
   "rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-ring/30"
+
+/** 저장 성공/실패 알림 토스트 */
+function SaveToast({ state }: { state: SaveState }) {
+  const [visible, setVisible] = useState(false)
+
+  useEffect(() => {
+    if (!state) return
+    setVisible(true)
+    const t = setTimeout(() => setVisible(false), 2500)
+    return () => clearTimeout(t)
+  }, [state])
+
+  if (!visible || !state) return null
+
+  return (
+    <div
+      className={`fixed bottom-28 left-1/2 z-50 flex -translate-x-1/2 items-center gap-2 rounded-2xl px-5 py-3 text-sm font-semibold shadow-lg transition-all ${
+        state.ok
+          ? "bg-primary text-primary-foreground"
+          : "bg-red-500 text-white"
+      }`}
+      role="status"
+      aria-live="polite"
+    >
+      {state.ok ? (
+        <CheckCircle className="h-4 w-4 shrink-0" aria-hidden="true" />
+      ) : (
+        <XCircle className="h-4 w-4 shrink-0" aria-hidden="true" />
+      )}
+      {state.message}
+    </div>
+  )
+}
 const label = "text-xs font-semibold text-muted-foreground"
 
 export function AdminDashboard({
@@ -167,9 +201,12 @@ function ImagePicker({ name, current, text }: { name: string; current?: string |
 }
 
 function AppForm({ app }: { app?: AppWithScore }) {
+  const [state, action, pending] = useActionState(saveApp, null)
+
   return (
     <div className="flex flex-col gap-4">
-      <form action={saveApp} id={app ? `app-${app.id}` : "app-new"} className="flex flex-col gap-4">
+      <SaveToast state={state} />
+      <form action={action} id={app ? `app-${app.id}` : "app-new"} className="flex flex-col gap-4">
         {app ? <input type="hidden" name="id" value={app.id} /> : null}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field text="이름">
@@ -237,9 +274,10 @@ function AppForm({ app }: { app?: AppWithScore }) {
         <button
           type="submit"
           form={app ? `app-${app.id}` : "app-new"}
-          className="rounded-lg bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground transition-all hover:opacity-90 active:scale-95"
+          disabled={pending}
+          className="rounded-lg bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground transition-all hover:opacity-90 active:scale-95 disabled:opacity-60"
         >
-          저장
+          {pending ? "저장 중..." : "저장"}
         </button>
         {app ? (
           <DeleteButton action={deleteApp} id={app.id} confirmText={`'${app.name}'을(를) 삭제할까요?`} />
@@ -252,32 +290,22 @@ function AppForm({ app }: { app?: AppWithScore }) {
 function InsightForm({ insight }: { insight?: Insight }) {
   const formId = insight ? `insight-${insight.id}` : "insight-new"
   const [bodyHtml, setBodyHtml] = useState<string>(insight?.body ?? "")
-  const [extraPreviews, setExtraPreviews] = useState<string[]>(insight?.image_urls ?? [])
-
-  function handleExtraFiles(e: React.ChangeEvent<HTMLInputElement>) {
-    const files = Array.from(e.target.files ?? [])
-    const urls = files.map((f) => URL.createObjectURL(f))
-    setExtraPreviews(urls)
-  }
+  const [state, baseAction, pending] = useActionState(saveInsight, null)
 
   return (
     <div className="flex flex-col gap-4">
+      <SaveToast state={state} />
       <form
         action={async (fd) => {
           fd.set("body", bodyHtml)
-          await saveInsight(fd)
+          await baseAction(fd)
         }}
         id={formId}
         className="flex flex-col gap-4"
       >
         {insight ? <input type="hidden" name="id" value={insight.id} /> : null}
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-          <Field text="구분">
-            <select name="type" defaultValue={insight?.type ?? "칼럼"} className={input}>
-              <option value="칼럼">칼럼</option>
-              <option value="대외활동">대외활동</option>
-            </select>
-          </Field>
+        <input type="hidden" name="type" value="인사이트" />
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field text="카테고리">
             <select name="category" defaultValue={insight?.category ?? ""} className={input}>
               <option value="">— 선택 —</option>
@@ -310,39 +338,14 @@ function InsightForm({ insight }: { insight?: Insight }) {
 
         <ImagePicker name="image" current={insight?.image_url} text="대표 썸네일 이미지" />
 
-        {/* 다중 이미지 업로드 */}
-        <Field text="본문 이미지 (여러 장 선택 가능 — JPG, PNG, WEBP)">
-          <input
-            type="file"
-            name="images"
-            accept="image/jpeg,image/jpg,image/png,image/webp"
-            multiple
-            onChange={handleExtraFiles}
-            className="text-sm file:mr-3 file:rounded-lg file:border-0 file:bg-muted file:px-3 file:py-2 file:text-sm file:font-medium"
-          />
-          {extraPreviews.length > 0 && (
-            <div className="mt-2 flex flex-wrap gap-2">
-              {extraPreviews.map((url, i) => (
-                <img
-                  key={i}
-                  src={url}
-                  alt={`미리보기 ${i + 1}`}
-                  className="h-20 w-20 rounded-lg object-cover border border-border"
-                />
-              ))}
-            </div>
-          )}
-        </Field>
-
-        {/* 리치 텍스트 에디터 */}
-        <Field text="본문 (굵게·기울임·목록 지원)">
+        {/* 본문 에디터 — 툴바의 이미지 버튼으로 원하는 위치에 이미지 삽입 */}
+        <Field text="본문 (툴바의 이미지 버튼으로 원하는 위치에 사진 삽입 가능)">
           <RichTextEditor
             value={bodyHtml}
             onChange={setBodyHtml}
-            placeholder="본문 내용을 입력하세요..."
+            placeholder="본문 내용을 입력하고, 툴바의 🖼 버튼으로 이미지를 삽입하세요..."
           />
         </Field>
-        {/* hidden body — form action에서 덮어씌움 */}
         <input type="hidden" name="body" value={bodyHtml} />
       </form>
 
@@ -350,9 +353,10 @@ function InsightForm({ insight }: { insight?: Insight }) {
         <button
           type="submit"
           form={formId}
-          className="rounded-lg bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground transition-all hover:opacity-90 active:scale-95"
+          disabled={pending}
+          className="rounded-lg bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground transition-all hover:opacity-90 active:scale-95 disabled:opacity-60"
         >
-          저장
+          {pending ? "저장 중..." : "저장"}
         </button>
         {insight ? (
           <DeleteButton action={deleteInsight} id={insight.id} confirmText={`'${insight.title}'을(를) 삭제할까요?`} />
@@ -363,70 +367,83 @@ function InsightForm({ insight }: { insight?: Insight }) {
 }
 
 function HomeSettingsForm({ settings }: { settings: SiteSettings }) {
+  const [heroPreview, setHeroPreview] = useState<string | null>(settings.hero_image_url ?? null)
+  const [state, action, pending] = useActionState(saveSiteSettings, null)
+
   return (
     <div className="overflow-hidden rounded-2xl border border-primary/40 bg-card shadow-sm">
+      <SaveToast state={state} />
       <div className="px-5 py-4">
-        <p className="font-bold text-primary">홈 화면 텍스트 ���정</p>
+        <p className="font-bold text-primary">홈 화면 설정</p>
         <p className="text-xs text-muted-foreground">저장 후 즉시 홈 화면에 반영됩니다.</p>
       </div>
       <div className="border-t border-border px-5 py-5">
-        <form action={saveSiteSettings} className="flex flex-col gap-5">
+        <form action={action} className="flex flex-col gap-5">
+          {/* 히어로 섹션 */}
           <div className="rounded-xl bg-muted/50 p-4">
             <p className="mb-3 text-xs font-semibold text-muted-foreground">히어로 섹션 (상단 배너)</p>
             <div className="flex flex-col gap-4">
+              {/* 배경 이미지 업로더 */}
+              <Field text="배경 사진 (JPG, PNG, WEBP — 권장 가로 900px 이상)">
+                <div className="flex flex-col gap-3">
+                  {heroPreview && (
+                    <div className="relative h-36 w-full overflow-hidden rounded-xl border border-border">
+                      <img
+                        src={heroPreview}
+                        alt="히어로 배경 미리보기"
+                        className="h-full w-full object-cover object-center"
+                      />
+                      <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-b from-black/50 to-black/70">
+                        <span className="text-xs font-semibold text-white/80">미리보기</span>
+                      </div>
+                    </div>
+                  )}
+                  <input
+                    type="file"
+                    name="hero_image"
+                    accept="image/jpeg,image/jpg,image/png,image/webp"
+                    onChange={(e) => {
+                      const f = e.target.files?.[0]
+                      if (f) setHeroPreview(URL.createObjectURL(f))
+                    }}
+                    className="text-sm file:mr-3 file:rounded-lg file:border-0 file:bg-muted file:px-3 file:py-2 file:text-sm file:font-medium"
+                  />
+                  <p className="text-[11px] text-muted-foreground">
+                    파일을 선택하지 않으면 기존 사진이 유지됩니다.
+                  </p>
+                </div>
+              </Field>
               <Field text="메인 제목 (줄바꿈: Enter 키)">
-                <textarea
-                  name="hero_title"
-                  defaultValue={settings.hero_title}
-                  rows={3}
-                  className={input}
-                />
+                <textarea name="hero_title" defaultValue={settings.hero_title} rows={3} className={input} />
               </Field>
               <Field text="부제 (히어로 아래 설명 문구)">
-                <textarea
-                  name="hero_subtitle"
-                  defaultValue={settings.hero_subtitle}
-                  rows={2}
-                  className={input}
-                />
+                <textarea name="hero_subtitle" defaultValue={settings.hero_subtitle} rows={2} className={input} />
               </Field>
             </div>
           </div>
 
+          {/* 동아리 소개 섹션 */}
           <div className="rounded-xl bg-muted/50 p-4">
             <p className="mb-3 text-xs font-semibold text-muted-foreground">동아리 소개 섹션 (하단 카드)</p>
             <div className="flex flex-col gap-4">
               <Field text="소개 제목">
-                <input
-                  name="club_intro_title"
-                  defaultValue={settings.club_intro_title}
-                  className={input}
-                />
+                <input name="club_intro_title" defaultValue={settings.club_intro_title} className={input} />
               </Field>
               <Field text="소개 본문">
-                <textarea
-                  name="club_intro_body"
-                  defaultValue={settings.club_intro_body}
-                  rows={4}
-                  className={input}
-                />
+                <textarea name="club_intro_body" defaultValue={settings.club_intro_body} rows={4} className={input} />
               </Field>
               <Field text="활동 멤버 수">
-                <input
-                  name="member_count"
-                  type="number"
-                  defaultValue={settings.member_count}
-                  className={input}
-                />
+                <input name="member_count" type="number" defaultValue={settings.member_count} className={input} />
               </Field>
             </div>
           </div>
 
           <button
             type="submit"
-            className="self-start rounded-lg bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground transition-all hover:opacity-90 active:scale-95"
+            disabled={pending}
+            className="self-start rounded-lg bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground transition-all hover:opacity-90 active:scale-95 disabled:opacity-60"
           >
-            저장
+            {pending ? "저장 중..." : "저장"}
           </button>
         </form>
       </div>

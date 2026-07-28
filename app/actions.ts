@@ -88,10 +88,12 @@ export async function logout() {
 
 /* ---------------- apps ---------------- */
 
-export async function saveApp(formData: FormData) {
+export type SaveState = { ok: boolean; message: string } | null
+
+export async function saveApp(_prev: SaveState, formData: FormData): Promise<SaveState> {
   const id = num(formData.get("id"))
   const name = str(formData.get("name"))
-  if (!name) return
+  if (!name) return { ok: false, message: "앱 이름을 입력해 주세요." }
 
   const category = str(formData.get("category")) || "핀테크"
   const tagline = str(formData.get("tagline"))
@@ -158,6 +160,7 @@ export async function saveApp(formData: FormData) {
     )
   }
   revalidateAll()
+  return { ok: true, message: "저장되었습니다." }
 }
 
 export async function deleteApp(formData: FormData) {
@@ -171,10 +174,10 @@ export async function deleteApp(formData: FormData) {
 
 /* ---------------- insights ---------------- */
 
-export async function saveInsight(formData: FormData) {
+export async function saveInsight(_prev: SaveState, formData: FormData): Promise<SaveState> {
   const id = num(formData.get("id"))
   const title = str(formData.get("title"))
-  if (!title) return
+  if (!title) return { ok: false, message: "제목을 입력해 주세요." }
 
   const type = str(formData.get("type")) || "칼럼"
   const category = str(formData.get("category")) || null
@@ -223,6 +226,7 @@ export async function saveInsight(formData: FormData) {
     )
   }
   revalidateAll()
+  return { ok: true, message: "저장되었습니다." }
 }
 
 export async function deleteInsight(formData: FormData) {
@@ -236,21 +240,39 @@ export async function deleteInsight(formData: FormData) {
 
 /* ---------------- site settings ---------------- */
 
-export async function saveSiteSettings(formData: FormData) {
+export async function saveSiteSettings(_prev: SaveState, formData: FormData): Promise<SaveState> {
   const heroTitle = str(formData.get("hero_title")) || "대학생이 직접 써본\n모바일 금융앱은\n어땠을까?"
   const heroSubtitle = str(formData.get("hero_subtitle")) || "금융 동아리 MFS가 5가지 기준으로 솔직하게 평가한 핀테크·은행 앱 랭킹"
   const clubIntroTitle = str(formData.get("club_intro_title")) || "우리는 MFS 연구회입니다"
   const clubIntroBody = str(formData.get("club_intro_body")) || ""
   const memberCount = num(formData.get("member_count"), 14)
 
-  await getPool().query(
-    `UPDATE site_settings
-     SET hero_title=$1, hero_subtitle=$2, club_intro_title=$3, club_intro_body=$4,
-         member_count=$5, updated_at=now()
-     WHERE id=1`,
-    [heroTitle, heroSubtitle, clubIntroTitle, clubIntroBody, memberCount],
-  )
+  // 히어로 배경 이미지 업로드
+  const uploadedHeroImage = await maybeUpload(formData.get("hero_image"))
+
+  if (uploadedHeroImage) {
+    // 기존 이미지 삭제
+    const prev = await getPool().query("SELECT hero_image_url FROM site_settings WHERE id = 1")
+    await safeDelBlob(prev.rows[0]?.hero_image_url ?? null)
+
+    await getPool().query(
+      `UPDATE site_settings
+       SET hero_title=$1, hero_subtitle=$2, club_intro_title=$3, club_intro_body=$4,
+           member_count=$5, hero_image_url=$6, updated_at=now()
+       WHERE id=1`,
+      [heroTitle, heroSubtitle, clubIntroTitle, clubIntroBody, memberCount, uploadedHeroImage],
+    )
+  } else {
+    await getPool().query(
+      `UPDATE site_settings
+       SET hero_title=$1, hero_subtitle=$2, club_intro_title=$3, club_intro_body=$4,
+           member_count=$5, updated_at=now()
+       WHERE id=1`,
+      [heroTitle, heroSubtitle, clubIntroTitle, clubIntroBody, memberCount],
+    )
+  }
 
   revalidatePath("/")
   revalidatePath("/admin")
+  return { ok: true, message: "저장되었습니다." }
 }

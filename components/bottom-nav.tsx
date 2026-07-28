@@ -1,26 +1,41 @@
 "use client"
 
+"use client"
+
 import Link from "next/link"
-import { usePathname } from "next/navigation"
-import { Home, Trophy, Lightbulb, Sparkles } from "lucide-react"
+import { usePathname, useSearchParams } from "next/navigation"
+import { Home, Trophy, Lightbulb, Sparkles, Megaphone } from "lucide-react"
 
 const TABS = [
-  { href: "/", label: "홈", icon: Home },
-  { href: "/ranking", label: "랭킹", icon: Trophy },
-  { href: "/insights", label: "인사이트", icon: Lightbulb },
-  { href: "/recommend", label: "AI 추천", icon: Sparkles },
+  { href: "/", label: "홈", icon: Home, matchExact: true },
+  { href: "/ranking", label: "랭킹", icon: Trophy, matchExact: false },
+  { href: "/insights", label: "인사이트", icon: Lightbulb, matchExact: false, excludeTab: "대외활동" },
+  { href: "/insights?tab=대외활동", label: "대외활동", icon: Megaphone, matchExact: false, requireTab: "대외활동" },
+  { href: "/recommend", label: "AI 추천", icon: Sparkles, matchExact: false },
 ]
 
 export function BottomNav() {
   const pathname = usePathname()
+  const searchParams = useSearchParams()
+  const currentTab = searchParams.get("tab")
 
   if (pathname.startsWith("/admin")) return null
 
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-40 mx-auto w-full max-w-md bg-card/95 shadow-[0_-1px_0_0_rgba(0,0,0,0.08)] backdrop-blur dark:bg-zinc-900/95 dark:shadow-[0_-1px_0_0_rgba(255,255,255,0.06)]">
-      <ul className="flex items-stretch justify-around px-2 py-2">
+    <nav className="fixed inset-x-0 bottom-0 z-40 mx-auto w-full max-w-md bg-card/95 shadow-[0_-1px_0_0_rgba(0,0,0,0.08)] backdrop-blur">
+      <ul className="flex items-stretch justify-around px-1 py-2">
         {TABS.map((tab) => {
-          const active = tab.href === "/" ? pathname === "/" : pathname.startsWith(tab.href)
+          let active = false
+          if (tab.matchExact) {
+            active = pathname === tab.href
+          } else if ("requireTab" in tab && tab.requireTab) {
+            active = pathname.startsWith("/insights") && currentTab === tab.requireTab
+          } else if ("excludeTab" in tab && tab.excludeTab) {
+            active = pathname.startsWith("/insights") && currentTab !== tab.excludeTab
+          } else {
+            active = pathname.startsWith(tab.href)
+          }
+
           const Icon = tab.icon
           return (
             <li key={tab.href} className="flex-1">
