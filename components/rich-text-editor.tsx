@@ -74,6 +74,7 @@ function getModulesAndFormats() {
       container: [
         [{ header: [1, 2, 3, false] }],
         ["bold", "italic", "underline", "strike"],
+        [{ color: [] }, { background: [] }],
         [{ list: "ordered" }, { list: "bullet" }],
         ["blockquote", "link", "image"],
         ["clean"],
@@ -87,6 +88,7 @@ function getModulesAndFormats() {
   }
   _formats = [
     "header", "bold", "italic", "underline", "strike",
+    "color", "background",
     "list", "blockquote", "link", "image",
   ]
   return { modules: _modules, formats: _formats }

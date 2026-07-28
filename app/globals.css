@@ -150,6 +150,13 @@ body {
 }
 
 
+/* Quill 컬러 피커 드롭다운이 잘리지 않도록 */
+.ql-toolbar .ql-color-picker .ql-picker-options,
+.ql-toolbar .ql-background .ql-picker-options {
+  z-index: 100 !important;
+  min-width: 160px;
+}
+
 /* Quill editor overrides */
 .ql-toolbar {
   border-color: var(--color-border) !important;
