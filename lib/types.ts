@@ -23,6 +23,14 @@ export type App = {
 
 export type AppWithScore = App & { overall: number }
 
+export const INSIGHT_CATEGORIES = [
+  { value: "국내 뱅킹 앱 분석", label: "국내 뱅킹 앱 분석" },
+  { value: "해외 뱅킹 앱 분석", label: "해외 뱅킹 앱 분석" },
+  { value: "카드뉴스 소재", label: "카드뉴스 소재" },
+] as const
+
+export type InsightCategory = (typeof INSIGHT_CATEGORIES)[number]["value"]
+
 export type Insight = {
   id: number
   type: string
@@ -32,6 +40,7 @@ export type Insight = {
   body: string | null
   author: string | null
   image_url: string | null
+  image_urls: string[] | null
   published_on: string | null
   sort_order: number
   created_at: string
