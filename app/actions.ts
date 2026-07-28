@@ -238,6 +238,45 @@ export async function deleteInsight(formData: FormData) {
   revalidateAll()
 }
 
+/* ---------------- insight categories ---------------- */
+
+export async function saveInsightCategory(_prev: SaveState, formData: FormData): Promise<SaveState> {
+  const id = num(formData.get("id"))
+  const name = str(formData.get("name"))
+  if (!name) return { ok: false, message: "카테고리 이름을 입력해 주세요." }
+  const sortOrder = num(formData.get("sort_order"))
+
+  try {
+    if (id) {
+      await getPool().query(
+        "UPDATE insight_categories SET name=$1, sort_order=$2 WHERE id=$3",
+        [name, sortOrder, id],
+      )
+    } else {
+      await getPool().query(
+        "INSERT INTO insight_categories (name, sort_order) VALUES ($1, $2) ON CONFLICT (name) DO UPDATE SET sort_order=$2",
+        [name, sortOrder],
+      )
+    }
+  } catch (e: unknown) {
+    const msg = e instanceof Error ? e.message : String(e)
+    if (msg.includes("unique") || msg.includes("duplicate")) {
+      return { ok: false, message: "이미 존재하는 카테고리 이름입니다." }
+    }
+    return { ok: false, message: "저장에 실패했습니다." }
+  }
+
+  revalidateAll()
+  return { ok: true, message: "카테고리가 저장되었습니다." }
+}
+
+export async function deleteInsightCategory(formData: FormData) {
+  const id = num(formData.get("id"))
+  if (!id) return
+  await getPool().query("DELETE FROM insight_categories WHERE id=$1", [id])
+  revalidateAll()
+}
+
 /* ---------------- site settings ---------------- */
 
 export async function saveSiteSettings(_prev: SaveState, formData: FormData): Promise<SaveState> {

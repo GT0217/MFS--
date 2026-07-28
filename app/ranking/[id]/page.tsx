@@ -109,7 +109,7 @@ export default async function AppDetailPage({ params }: { params: Promise<{ id: 
       {app.club_comment && (
         <section className="px-5 pt-6">
           <h2 className="text-base font-bold">MFS 동아리 한줄평</h2>
-          <div className="mt-2 rounded-2xl bg-primary/5 p-4 text-sm leading-relaxed text-foreground ring-1 ring-primary/15">
+          <div className="mt-2 whitespace-pre-line rounded-2xl bg-primary/5 p-4 text-sm leading-relaxed text-foreground ring-1 ring-primary/15">
             {app.club_comment}
           </div>
         </section>

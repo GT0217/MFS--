@@ -51,7 +51,7 @@ export default async function HomePage() {
               </span>
             ))}
           </h1>
-          <p className="mt-3 max-w-[18rem] text-pretty text-[15px] leading-relaxed text-white/80">
+          <p className="mt-3 max-w-[18rem] text-[15px] leading-relaxed text-white/80 whitespace-pre-line">
             {settings.hero_subtitle}
           </p>
 
@@ -176,7 +176,7 @@ export default async function HomePage() {
               MFS 연구회 · 서경대학교
             </div>
             <h2 className="mt-2 text-2xl font-bold leading-tight">{settings.club_intro_title}</h2>
-            <p className="mt-3 text-pretty text-sm leading-relaxed text-muted-foreground">
+            <p className="mt-3 whitespace-pre-line text-sm leading-relaxed text-muted-foreground">
               {settings.club_intro_body}
             </p>
 

@@ -3,8 +3,8 @@
 import { useState, useEffect, useActionState } from "react"
 import Image from "next/image"
 import { CheckCircle, XCircle } from "lucide-react"
-import { CRITERIA, INSIGHT_CATEGORIES, type AppWithScore, type Insight, type SiteSettings } from "@/lib/types"
-import { saveApp, deleteApp, saveInsight, deleteInsight, saveSiteSettings, type SaveState } from "@/app/actions"
+import { CRITERIA, INSIGHT_CATEGORIES, type AppWithScore, type Insight, type InsightCategoryRow, type SiteSettings } from "@/lib/types"
+import { saveApp, deleteApp, saveInsight, deleteInsight, saveSiteSettings, saveInsightCategory, deleteInsightCategory, type SaveState } from "@/app/actions"
 import { RichTextEditor } from "@/components/rich-text-editor"
 import "react-quill-new/dist/quill.snow.css"
 
@@ -49,12 +49,14 @@ export function AdminDashboard({
   apps,
   insights,
   siteSettings,
+  categories,
 }: {
   apps: AppWithScore[]
   insights: Insight[]
   siteSettings: SiteSettings
+  categories: InsightCategoryRow[]
 }) {
-  const [tab, setTab] = useState<"apps" | "insights" | "home">("apps")
+  const [tab, setTab] = useState<"apps" | "insights" | "categories" | "home">("apps")
 
   return (
     <div className="flex flex-col gap-6">
@@ -75,6 +77,14 @@ export function AdminDashboard({
             }`}
           >
             인사이트 ({insights.length})
+          </button>
+          <button
+            onClick={() => setTab("categories")}
+            className={`rounded-lg px-3 py-1.5 text-sm font-semibold transition-colors ${
+              tab === "categories" ? "bg-primary text-primary-foreground" : "text-muted-foreground"
+            }`}
+          >
+            카테고리
           </button>
           <button
             onClick={() => setTab("home")}
@@ -105,14 +115,16 @@ export function AdminDashboard({
       ) : tab === "insights" ? (
         <div className="flex flex-col gap-4">
           <Collapsible title="새 인사이트 추가" accent>
-            <InsightForm />
+            <InsightForm categories={categories} />
           </Collapsible>
           {insights.map((it) => (
-            <Collapsible key={it.id} title={it.title} subtitle={it.type}>
-              <InsightForm insight={it} />
+            <Collapsible key={it.id} title={it.title} subtitle={it.category ?? it.type}>
+              <InsightForm insight={it} categories={categories} />
             </Collapsible>
           ))}
         </div>
+      ) : tab === "categories" ? (
+        <CategoryManager categories={categories} />
       ) : (
         <HomeSettingsForm settings={siteSettings} />
       )}
@@ -287,10 +299,15 @@ function AppForm({ app }: { app?: AppWithScore }) {
   )
 }
 
-function InsightForm({ insight }: { insight?: Insight }) {
+function InsightForm({ insight, categories }: { insight?: Insight; categories: InsightCategoryRow[] }) {
   const formId = insight ? `insight-${insight.id}` : "insight-new"
   const [bodyHtml, setBodyHtml] = useState<string>(insight?.body ?? "")
   const [state, baseAction, pending] = useActionState(saveInsight, null)
+
+  // DB 카테고리가 없으면 하드코딩 폴백 사용
+  const categoryOptions = categories.length > 0
+    ? categories.map((c) => ({ value: c.name, label: c.name }))
+    : INSIGHT_CATEGORIES.map((c) => ({ value: c.value, label: c.label }))
 
   return (
     <div className="flex flex-col gap-4">
@@ -309,7 +326,7 @@ function InsightForm({ insight }: { insight?: Insight }) {
           <Field text="카테고리">
             <select name="category" defaultValue={insight?.category ?? ""} className={input}>
               <option value="">— 선택 —</option>
-              {INSIGHT_CATEGORIES.map((c) => (
+              {categoryOptions.map((c) => (
                 <option key={c.value} value={c.value}>{c.label}</option>
               ))}
             </select>
@@ -472,5 +489,132 @@ function DeleteButton({
         삭제
       </button>
     </form>
+  )
+}
+
+/* ── 카테고리 관리 ── */
+function CategoryManager({ categories }: { categories: InsightCategoryRow[] }) {
+  const [addState, addAction, addPending] = useActionState(saveInsightCategory, null)
+  const [customName, setCustomName] = useState("")
+
+  return (
+    <div className="flex flex-col gap-4">
+      <SaveToast state={addState} />
+
+      {/* 기존 카테고리 목록 */}
+      <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+        <div className="px-5 py-4">
+          <p className="font-bold">카테고리 목록</p>
+          <p className="text-xs text-muted-foreground">인사이트 탭과 글쓰기 폼에 동일하게 반영됩니다.</p>
+        </div>
+        <div className="divide-y divide-border border-t border-border">
+          {categories.length === 0 ? (
+            <p className="px-5 py-4 text-sm text-muted-foreground">등록된 카테고리가 없습니다.</p>
+          ) : (
+            categories.map((cat) => (
+              <CategoryRow key={cat.id} cat={cat} />
+            ))
+          )}
+        </div>
+      </div>
+
+      {/* 새 카테고리 직접 입력 추가 */}
+      <div className="overflow-hidden rounded-2xl border border-primary/40 bg-card shadow-sm">
+        <div className="px-5 py-4">
+          <p className="font-bold text-primary">새 카테고리 추가</p>
+          <p className="text-xs text-muted-foreground">직접 입력해서 원하는 카테고리를 추가하세요.</p>
+        </div>
+        <div className="border-t border-border px-5 py-5">
+          <form action={addAction} className="flex flex-col gap-4">
+            <Field text="카테고리 이름 (직접 입력)">
+              <input
+                name="name"
+                value={customName}
+                onChange={(e) => setCustomName(e.target.value)}
+                placeholder="예: 해외 트렌드, 카드뉴스 소재, 리서치 리포트..."
+                required
+                className={input}
+              />
+            </Field>
+            <Field text="정렬 순서 (숫자가 낮을수록 앞에 표시)">
+              <input
+                name="sort_order"
+                type="number"
+                defaultValue={categories.length}
+                className={input}
+              />
+            </Field>
+            <button
+              type="submit"
+              disabled={addPending}
+              className="self-start rounded-lg bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground transition-all hover:opacity-90 active:scale-95 disabled:opacity-60"
+            >
+              {addPending ? "추가 중..." : "카테고리 추가"}
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function CategoryRow({ cat }: { cat: InsightCategoryRow }) {
+  const [editing, setEditing] = useState(false)
+  const [state, action, pending] = useActionState(saveInsightCategory, null)
+
+  return (
+    <div className="flex items-center gap-3 px-5 py-3">
+      <SaveToast state={state} />
+      {editing ? (
+        <form action={action} className="flex flex-1 items-center gap-2">
+          <input type="hidden" name="id" value={cat.id} />
+          <input
+            name="name"
+            defaultValue={cat.name}
+            required
+            className={`${input} flex-1 text-sm`}
+            autoFocus
+          />
+          <input type="hidden" name="sort_order" value={cat.sort_order} />
+          <button
+            type="submit"
+            disabled={pending}
+            className="rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground disabled:opacity-60"
+          >
+            {pending ? "..." : "저장"}
+          </button>
+          <button
+            type="button"
+            onClick={() => setEditing(false)}
+            className="rounded-lg border border-border px-3 py-1.5 text-xs font-semibold text-muted-foreground"
+          >
+            취소
+          </button>
+        </form>
+      ) : (
+        <>
+          <span className="flex-1 text-sm font-medium">{cat.name}</span>
+          <button
+            type="button"
+            onClick={() => setEditing(true)}
+            className="text-xs font-medium text-muted-foreground hover:text-foreground"
+          >
+            수정
+          </button>
+          <form
+            action={deleteInsightCategory}
+            onSubmit={(e) => {
+              if (!confirm(`'${cat.name}' 카테고리를 삭제할까요?\n해당 카테고리로 등록된 글은 삭제되지 않습니다.`))
+                e.preventDefault()
+            }}
+          >
+            <input type="hidden" name="id" value={cat.id} />
+            <button type="submit" className="text-xs font-medium text-red-500 hover:text-red-600">
+              삭제
+            </button>
+          </form>
+        </>
+      )}
+    </div>
   )
 }
