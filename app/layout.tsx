@@ -47,9 +47,13 @@ export default function RootLayout({
           }}
         />
         <ServiceWorkerRegister />
-        <div className="relative mx-auto flex min-h-dvh w-full max-w-md flex-col bg-background">
+        {/* 
+          스크롤은 <body> 네이티브에서 발생해야 pull-to-refresh가 정상 동작.
+          flex-col + min-h-dvh만 유지하고, overflow 제한 클래스는 사용하지 않음.
+        */}
+        <div className="relative mx-auto w-full max-w-md min-h-dvh bg-background">
           <SettingsMenu />
-          <main className="flex-1 pb-24">{children}</main>
+          <main className="pb-24">{children}</main>
           <BottomNav />
         </div>
       </body>

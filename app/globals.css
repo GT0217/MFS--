@@ -54,11 +54,20 @@ html.text-large {
   -webkit-tap-highlight-color: transparent;
 }
 
+/* 모든 버튼/링크에 부드러운 색상 전환 */
+button, a {
+  transition-property: color, background-color, border-color, opacity, box-shadow, transform;
+  transition-duration: 200ms;
+  transition-timing-function: ease-in-out;
+}
+
 html,
 body {
   background-color: var(--color-background);
   color: var(--color-foreground);
   -webkit-font-smoothing: antialiased;
+  /* 수직 스크롤 의도를 브라우저에 명확히 전달 → pull-to-refresh 정확도 향상 */
+  touch-action: pan-y;
 }
 
 /* Force dark backgrounds on key containers */

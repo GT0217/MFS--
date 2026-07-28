@@ -78,8 +78,8 @@ function InsightViewer({
         <div className="w-[60px] shrink-0" />
       </div>
 
-      {/* Content */}
-      <div className="flex-1 overflow-y-auto">
+      {/* Content — overscroll-contain으로 부모 pull-to-refresh 체이닝 방지, touch-pan-y로 수직 스크롤 의도 명시 */}
+      <div className="flex-1 overflow-y-auto overscroll-contain touch-pan-y">
         <div className="mx-auto max-w-2xl px-5 py-8">
           {/* 메타 정보 */}
           <div className="mb-8 border-b border-border pb-6">
@@ -256,10 +256,10 @@ export function InsightTabs({
           <ChevronLeft className="h-4 w-4 text-foreground" aria-hidden="true" />
         </button>
 
-        {/* 탭 스크롤 영역 */}
+        {/* 탭 스크롤 영역 — overscroll-contain으로 부모 스크롤 체이닝 방지 */}
         <div
           ref={scrollRef}
-          className="flex flex-1 gap-1.5 overflow-x-auto no-scrollbar scroll-smooth"
+          className="flex flex-1 gap-1.5 overflow-x-auto overscroll-contain no-scrollbar scroll-smooth"
         >
           {tabs.map((t) => {
             const active = tab === t.key
@@ -306,7 +306,7 @@ export function InsightTabs({
                 key={insight.id}
                 type="button"
                 onClick={() => setSelectedIndex(idx)}
-                className="group overflow-hidden rounded-3xl bg-card shadow-sm transition-all active:scale-[0.99] active:shadow-none text-left"
+                className="group overflow-hidden rounded-3xl bg-card shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg active:scale-[0.99] active:shadow-none active:translate-y-0 text-left"
               >
                 <div className="flex gap-4 p-4">
                   {/* 썸네일 */}
