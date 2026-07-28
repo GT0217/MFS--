@@ -1,14 +1,48 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect, useActionState } from "react"
 import Image from "next/image"
+import { CheckCircle, XCircle } from "lucide-react"
 import { CRITERIA, INSIGHT_CATEGORIES, type AppWithScore, type Insight, type SiteSettings } from "@/lib/types"
-import { saveApp, deleteApp, saveInsight, deleteInsight, saveSiteSettings } from "@/app/actions"
+import { saveApp, deleteApp, saveInsight, deleteInsight, saveSiteSettings, type SaveState } from "@/app/actions"
 import { RichTextEditor } from "@/components/rich-text-editor"
 import "react-quill-new/dist/quill.snow.css"
 
 const input =
   "rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-ring/30"
+
+/** 저장 성공/실패 알림 토스트 */
+function SaveToast({ state }: { state: SaveState }) {
+  const [visible, setVisible] = useState(false)
+
+  useEffect(() => {
+    if (!state) return
+    setVisible(true)
+    const t = setTimeout(() => setVisible(false), 2500)
+    return () => clearTimeout(t)
+  }, [state])
+
+  if (!visible || !state) return null
+
+  return (
+    <div
+      className={`fixed bottom-28 left-1/2 z-50 flex -translate-x-1/2 items-center gap-2 rounded-2xl px-5 py-3 text-sm font-semibold shadow-lg transition-all ${
+        state.ok
+          ? "bg-primary text-primary-foreground"
+          : "bg-red-500 text-white"
+      }`}
+      role="status"
+      aria-live="polite"
+    >
+      {state.ok ? (
+        <CheckCircle className="h-4 w-4 shrink-0" aria-hidden="true" />
+      ) : (
+        <XCircle className="h-4 w-4 shrink-0" aria-hidden="true" />
+      )}
+      {state.message}
+    </div>
+  )
+}
 const label = "text-xs font-semibold text-muted-foreground"
 
 export function AdminDashboard({
@@ -167,9 +201,12 @@ function ImagePicker({ name, current, text }: { name: string; current?: string |
 }
 
 function AppForm({ app }: { app?: AppWithScore }) {
+  const [state, action, pending] = useActionState(saveApp, null)
+
   return (
     <div className="flex flex-col gap-4">
-      <form action={saveApp} id={app ? `app-${app.id}` : "app-new"} className="flex flex-col gap-4">
+      <SaveToast state={state} />
+      <form action={action} id={app ? `app-${app.id}` : "app-new"} className="flex flex-col gap-4">
         {app ? <input type="hidden" name="id" value={app.id} /> : null}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field text="이름">
@@ -237,9 +274,10 @@ function AppForm({ app }: { app?: AppWithScore }) {
         <button
           type="submit"
           form={app ? `app-${app.id}` : "app-new"}
-          className="rounded-lg bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground transition-all hover:opacity-90 active:scale-95"
+          disabled={pending}
+          className="rounded-lg bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground transition-all hover:opacity-90 active:scale-95 disabled:opacity-60"
         >
-          저장
+          {pending ? "저장 중..." : "저장"}
         </button>
         {app ? (
           <DeleteButton action={deleteApp} id={app.id} confirmText={`'${app.name}'을(를) 삭제할까요?`} />
@@ -253,6 +291,7 @@ function InsightForm({ insight }: { insight?: Insight }) {
   const formId = insight ? `insight-${insight.id}` : "insight-new"
   const [bodyHtml, setBodyHtml] = useState<string>(insight?.body ?? "")
   const [extraPreviews, setExtraPreviews] = useState<string[]>(insight?.image_urls ?? [])
+  const [state, baseAction, pending] = useActionState(saveInsight, null)
 
   function handleExtraFiles(e: React.ChangeEvent<HTMLInputElement>) {
     const files = Array.from(e.target.files ?? [])
@@ -262,10 +301,11 @@ function InsightForm({ insight }: { insight?: Insight }) {
 
   return (
     <div className="flex flex-col gap-4">
+      <SaveToast state={state} />
       <form
         action={async (fd) => {
           fd.set("body", bodyHtml)
-          await saveInsight(fd)
+          await baseAction(fd)
         }}
         id={formId}
         className="flex flex-col gap-4"
@@ -335,7 +375,7 @@ function InsightForm({ insight }: { insight?: Insight }) {
           <RichTextEditor
             value={bodyHtml}
             onChange={setBodyHtml}
-            placeholder="본문 내용을 입력하세요..."
+            placeholder="본문 내용을 ��력하세요..."
           />
         </Field>
         {/* hidden body — form action에서 덮어씌움 */}
@@ -346,9 +386,10 @@ function InsightForm({ insight }: { insight?: Insight }) {
         <button
           type="submit"
           form={formId}
-          className="rounded-lg bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground transition-all hover:opacity-90 active:scale-95"
+          disabled={pending}
+          className="rounded-lg bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground transition-all hover:opacity-90 active:scale-95 disabled:opacity-60"
         >
-          저장
+          {pending ? "저장 중..." : "저장"}
         </button>
         {insight ? (
           <DeleteButton action={deleteInsight} id={insight.id} confirmText={`'${insight.title}'을(를) 삭제할까요?`} />
@@ -360,15 +401,17 @@ function InsightForm({ insight }: { insight?: Insight }) {
 
 function HomeSettingsForm({ settings }: { settings: SiteSettings }) {
   const [heroPreview, setHeroPreview] = useState<string | null>(settings.hero_image_url ?? null)
+  const [state, action, pending] = useActionState(saveSiteSettings, null)
 
   return (
     <div className="overflow-hidden rounded-2xl border border-primary/40 bg-card shadow-sm">
+      <SaveToast state={state} />
       <div className="px-5 py-4">
         <p className="font-bold text-primary">홈 화면 설정</p>
         <p className="text-xs text-muted-foreground">저장 후 즉시 홈 화면에 반영됩니다.</p>
       </div>
       <div className="border-t border-border px-5 py-5">
-        <form action={saveSiteSettings} className="flex flex-col gap-5">
+        <form action={action} className="flex flex-col gap-5">
           {/* 히어로 섹션 */}
           <div className="rounded-xl bg-muted/50 p-4">
             <p className="mb-3 text-xs font-semibold text-muted-foreground">히어로 섹션 (상단 배너)</p>
@@ -430,9 +473,10 @@ function HomeSettingsForm({ settings }: { settings: SiteSettings }) {
 
           <button
             type="submit"
-            className="self-start rounded-lg bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground transition-all hover:opacity-90 active:scale-95"
+            disabled={pending}
+            className="self-start rounded-lg bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground transition-all hover:opacity-90 active:scale-95 disabled:opacity-60"
           >
-            저장
+            {pending ? "저장 중..." : "저장"}
           </button>
         </form>
       </div>
