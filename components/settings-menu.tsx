@@ -2,25 +2,19 @@
 
 import { useEffect, useRef, useState } from "react"
 import Link from "next/link"
-import { Settings, Moon, Sun, Type, ShieldCheck, Check } from "lucide-react"
+import { Settings, Type, ShieldCheck, Check } from "lucide-react"
 
 type TextSize = "default" | "large"
 
 export function SettingsMenu() {
   const [open, setOpen] = useState(false)
-  const [dark, setDark] = useState(false)
   const [textSize, setTextSize] = useState<TextSize>("default")
   const containerRef = useRef<HTMLDivElement>(null)
 
   // Load persisted settings on mount
   useEffect(() => {
-    const storedTheme = localStorage.getItem("mfs-theme")
     const storedSize = (localStorage.getItem("mfs-text-size") as TextSize) || "default"
-    const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches
-    const isDark = storedTheme ? storedTheme === "dark" : prefersDark
-    setDark(isDark)
     setTextSize(storedSize)
-    document.documentElement.classList.toggle("dark", isDark)
     document.documentElement.classList.toggle("text-large", storedSize === "large")
   }, [])
 
@@ -42,13 +36,6 @@ export function SettingsMenu() {
       document.removeEventListener("keydown", onKey)
     }
   }, [open])
-
-  function toggleDark() {
-    const next = !dark
-    setDark(next)
-    document.documentElement.classList.toggle("dark", next)
-    localStorage.setItem("mfs-theme", next ? "dark" : "light")
-  }
 
   function changeTextSize(size: TextSize) {
     setTextSize(size)
@@ -81,39 +68,8 @@ export function SettingsMenu() {
             <p className="text-[11px]" style={{ color: "var(--color-muted-foreground)" }}>화면을 보기 편하게 조절하세요</p>
           </div>
 
-          {/* Dark mode toggle */}
-          <button
-            type="button"
-            role="menuitem"
-            onClick={toggleDark}
-            className="flex w-full items-center justify-between px-4 py-3.5 text-left transition-colors"
-            style={{ color: "var(--color-foreground)" }}
-            onMouseEnter={(e) => (e.currentTarget.style.background = "var(--color-muted)")}
-            onMouseLeave={(e) => (e.currentTarget.style.background = "")}
-          >
-            <span className="flex items-center gap-2.5 text-sm font-medium">
-              {dark ? (
-                <Moon className="h-4 w-4" style={{ color: "var(--color-primary)" }} aria-hidden="true" />
-              ) : (
-                <Sun className="h-4 w-4" style={{ color: "var(--color-primary)" }} aria-hidden="true" />
-              )}
-              다크 모드
-            </span>
-            {/* Toggle switch */}
-            <span
-              className="relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors duration-200"
-              style={{ background: dark ? "var(--color-primary)" : "var(--color-border)" }}
-              aria-hidden="true"
-            >
-              <span
-                className="inline-block h-5 w-5 rounded-full bg-white shadow transition-transform duration-200"
-                style={{ transform: dark ? "translateX(22px)" : "translateX(2px)" }}
-              />
-            </span>
-          </button>
-
           {/* Text size */}
-          <div style={{ borderTop: "1px solid var(--color-border)" }} className="px-4 py-3">
+          <div className="px-4 py-3">
             <span className="flex items-center gap-2.5 text-sm font-semibold" style={{ color: "var(--color-foreground)" }}>
               <Type className="h-4 w-4" style={{ color: "var(--color-primary)" }} aria-hidden="true" />
               텍스트 크기
