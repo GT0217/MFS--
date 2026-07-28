@@ -1,14 +1,21 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { FileText, Megaphone, ChevronLeft, ChevronRight } from "lucide-react"
+import { FileText, Megaphone, BarChart2, Globe, Layout, ChevronLeft, ChevronRight, Download } from "lucide-react"
 import type { Insight } from "@/lib/types"
 import { formatDate } from "@/lib/types"
 
 const TABS = [
-  { key: "칼럼", label: "MFS 칼럼" },
-  { key: "대외활동", label: "대외활동" },
+  { key: "국내 뱅킹 앱 분석", label: "국내 분석", icon: BarChart2 },
+  { key: "해외 뱅킹 앱 분석", label: "해외 분석", icon: Globe },
+  { key: "카드뉴스 소재", label: "카드뉴스", icon: Layout },
 ] as const
+
+type TabKey = (typeof TABS)[number]["key"]
+
+function isPdf(url: string) {
+  return url.toLowerCase().includes(".pdf") || url.toLowerCase().includes("application/pdf")
+}
 
 function InsightViewer({
   insight,
@@ -25,20 +32,14 @@ function InsightViewer({
   hasNext: boolean
   hasPrev: boolean
 }) {
-  // ESC 키 / 휴대폰 뒤로가기(브라우저 back)로도 닫히게 하고, 배경 스크롤을 잠근다.
   useEffect(() => {
     window.history.pushState({ mfsViewer: true }, "")
     const onPop = () => onClose()
     window.addEventListener("popstate", onPop)
-
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") window.history.back()
-    }
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") window.history.back() }
     document.addEventListener("keydown", onKey)
-
     const { overflow } = document.body.style
     document.body.style.overflow = "hidden"
-
     return () => {
       window.removeEventListener("popstate", onPop)
       document.removeEventListener("keydown", onKey)
@@ -46,8 +47,14 @@ function InsightViewer({
     }
   }, [onClose])
 
-  // 닫기 버튼도 히스토리 back으로 통일 → popstate가 실제 닫기를 처리
   const handleBack = () => window.history.back()
+
+  const allImages: string[] = [
+    ...(insight.image_url ? [insight.image_url] : []),
+    ...(Array.isArray(insight.image_urls) ? insight.image_urls : []),
+  ].filter(Boolean)
+
+  const isHtmlBody = insight.body ? insight.body.trim().startsWith("<") : false
 
   return (
     <div
@@ -76,19 +83,6 @@ function InsightViewer({
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto">
-        {/* Image - 웹툰처럼 풀 너비 */}
-        {insight.image_url && (
-          <div className="w-full bg-muted/50">
-            <img
-              src={insight.image_url}
-              alt={insight.title}
-              className="w-full h-auto object-cover"
-              crossOrigin="anonymous"
-            />
-          </div>
-        )}
-
-        {/* Article Content */}
         <div className="mx-auto max-w-2xl px-5 py-8">
           {/* 메타 정보 */}
           <div className="mb-8 border-b border-border pb-6">
@@ -99,25 +93,63 @@ function InsightViewer({
             </p>
           </div>
 
-          {/* 본문 - 기사처럼 읽기 좋은 포맷 */}
+          {/* 다중 이미지 — 기사 스타일 세로 배치 */}
+          {allImages.filter((u) => !isPdf(u)).length > 0 && (
+            <div className="mb-8 flex flex-col gap-6">
+              {allImages.filter((u) => !isPdf(u)).map((url, i) => (
+                <figure key={i} className="w-full overflow-hidden rounded-2xl bg-muted/30">
+                  <img
+                    src={url}
+                    alt={`${insight.title} 이미지 ${i + 1}`}
+                    className="w-full h-auto object-cover"
+                    crossOrigin="anonymous"
+                    loading={i === 0 ? "eager" : "lazy"}
+                    decoding="async"
+                    style={{ imageRendering: "auto" }}
+                  />
+                </figure>
+              ))}
+            </div>
+          )}
+
+          {/* PDF 다운로드 버튼 */}
+          {allImages.filter((u) => isPdf(u)).map((url, i) => (
+            <a
+              key={i}
+              href={url}
+              target="_blank"
+              rel="noopener noreferrer"
+              download
+              className="mb-4 flex items-center gap-3 rounded-2xl border border-border bg-card px-5 py-4 text-sm font-semibold text-foreground shadow-sm hover:bg-muted transition-colors"
+            >
+              <Download className="h-5 w-5 text-primary shrink-0" aria-hidden="true" />
+              <span className="truncate">PDF 보기 · {url.split("/").pop()}</span>
+            </a>
+          ))}
+
+          {/* 본문 — HTML이면 prose로, 일반 텍스트면 whitespace-pre-line */}
           {insight.body ? (
-            <div className="prose prose-sm max-w-none dark:prose-invert">
+            isHtmlBody ? (
+              <div
+                className="prose prose-sm max-w-none leading-8"
+                dangerouslySetInnerHTML={{ __html: insight.body }}
+              />
+            ) : (
               <p className="whitespace-pre-line text-base leading-8 text-foreground">
                 {insight.body}
               </p>
-            </div>
+            )
           ) : insight.summary ? (
             <p className="text-base leading-8 text-muted-foreground">{insight.summary}</p>
           ) : (
             <p className="text-sm text-muted-foreground">본문 내용이 없습니다.</p>
           )}
 
-          {/* 하단 여백 */}
           <div className="mt-16" />
         </div>
       </div>
 
-      {/* 네비게이션 버튼 - 하단 고정 */}
+      {/* 하단 네비게이션 */}
       <div className="sticky bottom-0 flex items-center justify-between border-t border-border bg-card/95 backdrop-blur-sm px-4 py-4">
         <button
           type="button"
@@ -146,100 +178,98 @@ function InsightViewer({
 }
 
 export function InsightTabs({ insights }: { insights: Insight[] }) {
-  const [tab, setTab] = useState<(typeof TABS)[number]["key"]>("칼럼")
+  const [tab, setTab] = useState<TabKey>("국내 뱅킹 앱 분석")
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null)
-  const filtered = insights.filter((i) => i.type === tab)
+
+  const filtered = insights.filter((i) => i.category === tab)
   const selectedInsight = selectedIndex !== null ? filtered[selectedIndex] : null
 
   const handleNext = () => {
-    if (selectedIndex !== null && selectedIndex < filtered.length - 1) {
-      setSelectedIndex(selectedIndex + 1)
-    }
+    if (selectedIndex !== null && selectedIndex < filtered.length - 1) setSelectedIndex(selectedIndex + 1)
   }
-
   const handlePrev = () => {
-    if (selectedIndex !== null && selectedIndex > 0) {
-      setSelectedIndex(selectedIndex - 1)
-    }
+    if (selectedIndex !== null && selectedIndex > 0) setSelectedIndex(selectedIndex - 1)
   }
 
   return (
     <div>
-      {/* 탭 버튼 */}
-      <div className="grid grid-cols-2 gap-1 rounded-2xl bg-muted p-1">
-        {TABS.map((t) => (
-          <button
-            key={t.key}
-            type="button"
-            onClick={() => {
-              setTab(t.key)
-              setSelectedIndex(null)
-            }}
-            className={`rounded-xl py-2.5 text-sm font-semibold transition-colors ${
-              tab === t.key ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"
-            }`}
-          >
-            {t.label}
-          </button>
-        ))}
+      {/* 탭 버튼 — 3종 카테고리 */}
+      <div className="flex gap-1 overflow-x-auto no-scrollbar">
+        {TABS.map((t) => {
+          const Icon = t.icon
+          const active = tab === t.key
+          return (
+            <button
+              key={t.key}
+              type="button"
+              onClick={() => { setTab(t.key); setSelectedIndex(null) }}
+              className={`flex shrink-0 items-center gap-1.5 rounded-full px-4 py-2 text-sm font-semibold transition-colors ${
+                active ? "bg-primary text-primary-foreground shadow-sm" : "bg-muted text-muted-foreground"
+              }`}
+            >
+              <Icon className="h-3.5 w-3.5" aria-hidden="true" />
+              {t.label}
+            </button>
+          )
+        })}
       </div>
 
-      {/* 칼럼 리스트 - 썸네일 + 정보 */}
+      {/* 리스트 */}
       <div className="mt-4 grid gap-4">
         {filtered.length === 0 ? (
-          <div className="rounded-3xl bg-card p-8 text-center text-sm text-muted-foreground shadow-sm dark:bg-zinc-800">
+          <div className="rounded-3xl bg-card p-8 text-center text-sm text-muted-foreground shadow-sm">
             아직 등록된 글이 없습니다.
           </div>
         ) : (
-          filtered.map((insight, idx) => (
-            <button
-              key={insight.id}
-              type="button"
-              onClick={() => setSelectedIndex(idx)}
-              className="group overflow-hidden rounded-3xl bg-card shadow-sm transition-all active:scale-[0.99] active:shadow-none dark:bg-zinc-800"
-            >
-              <div className="flex gap-4 p-4">
-                {/* 썸네일 */}
-                <div className="relative h-28 w-28 shrink-0 overflow-hidden rounded-xl bg-primary/10">
-                  {insight.image_url ? (
-                    <img
-                      src={insight.image_url}
-                      alt=""
-                      className="h-full w-full object-cover group-hover:scale-105 transition-transform"
-                      crossOrigin="anonymous"
-                    />
-                  ) : insight.type === "칼럼" ? (
-                    <div className="flex h-full w-full items-center justify-center text-primary">
-                      <FileText className="h-8 w-8" aria-hidden="true" />
-                    </div>
-                  ) : (
-                    <div className="flex h-full w-full items-center justify-center text-primary">
-                      <Megaphone className="h-8 w-8" aria-hidden="true" />
-                    </div>
-                  )}
-                </div>
-
-                {/* 정보 */}
-                <div className="min-w-0 flex-1 text-left">
-                  {insight.category && (
-                    <span className="text-xs font-semibold text-primary">{insight.category}</span>
-                  )}
-                  <p className="mt-1 text-sm font-bold leading-snug line-clamp-2 text-foreground">
-                    {insight.title}
-                  </p>
-                  {insight.summary && (
-                    <p className="mt-2 line-clamp-2 text-xs text-muted-foreground leading-relaxed">
-                      {insight.summary}
+          filtered.map((insight, idx) => {
+            const thumb = insight.image_url || (insight.image_urls ?? [])[0]
+            return (
+              <button
+                key={insight.id}
+                type="button"
+                onClick={() => setSelectedIndex(idx)}
+                className="group overflow-hidden rounded-3xl bg-card shadow-sm transition-all active:scale-[0.99] active:shadow-none text-left"
+              >
+                <div className="flex gap-4 p-4">
+                  {/* 썸네일 */}
+                  <div className="relative h-28 w-28 shrink-0 overflow-hidden rounded-xl bg-primary/10">
+                    {thumb ? (
+                      <img
+                        src={thumb}
+                        alt=""
+                        className="h-full w-full object-cover group-hover:scale-105 transition-transform"
+                        crossOrigin="anonymous"
+                        loading="lazy"
+                        decoding="async"
+                      />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center text-primary">
+                        <FileText className="h-8 w-8" aria-hidden="true" />
+                      </div>
+                    )}
+                  </div>
+                  {/* 정보 */}
+                  <div className="min-w-0 flex-1">
+                    {insight.category && (
+                      <span className="text-xs font-semibold text-primary">{insight.category}</span>
+                    )}
+                    <p className="mt-1 text-sm font-bold leading-snug line-clamp-2 text-foreground">
+                      {insight.title}
                     </p>
-                  )}
-                  <p className="mt-3 text-xs text-muted-foreground">
-                    {insight.author}
-                    {insight.published_on ? ` · ${formatDate(insight.published_on)}` : ""}
-                  </p>
+                    {insight.summary && (
+                      <p className="mt-2 line-clamp-2 text-xs text-muted-foreground leading-relaxed">
+                        {insight.summary}
+                      </p>
+                    )}
+                    <p className="mt-3 text-xs text-muted-foreground">
+                      {insight.author}
+                      {insight.published_on ? ` · ${formatDate(insight.published_on)}` : ""}
+                    </p>
+                  </div>
                 </div>
-              </div>
-            </button>
-          ))
+              </button>
+            )
+          })
         )}
       </div>
 

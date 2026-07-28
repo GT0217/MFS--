@@ -2,8 +2,10 @@
 
 import { useState } from "react"
 import Image from "next/image"
-import { CRITERIA, type AppWithScore, type Insight, type SiteSettings } from "@/lib/types"
+import { CRITERIA, INSIGHT_CATEGORIES, type AppWithScore, type Insight, type SiteSettings } from "@/lib/types"
 import { saveApp, deleteApp, saveInsight, deleteInsight, saveSiteSettings } from "@/app/actions"
+import { RichTextEditor } from "@/components/rich-text-editor"
+import "react-quill-new/dist/quill.snow.css"
 
 const input =
   "rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-ring/30"
@@ -249,9 +251,25 @@ function AppForm({ app }: { app?: AppWithScore }) {
 
 function InsightForm({ insight }: { insight?: Insight }) {
   const formId = insight ? `insight-${insight.id}` : "insight-new"
+  const [bodyHtml, setBodyHtml] = useState<string>(insight?.body ?? "")
+  const [extraPreviews, setExtraPreviews] = useState<string[]>(insight?.image_urls ?? [])
+
+  function handleExtraFiles(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(e.target.files ?? [])
+    const urls = files.map((f) => URL.createObjectURL(f))
+    setExtraPreviews(urls)
+  }
+
   return (
     <div className="flex flex-col gap-4">
-      <form action={saveInsight} id={formId} className="flex flex-col gap-4">
+      <form
+        action={async (fd) => {
+          fd.set("body", bodyHtml)
+          await saveInsight(fd)
+        }}
+        id={formId}
+        className="flex flex-col gap-4"
+      >
         {insight ? <input type="hidden" name="id" value={insight.id} /> : null}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <Field text="구분">
@@ -261,7 +279,12 @@ function InsightForm({ insight }: { insight?: Insight }) {
             </select>
           </Field>
           <Field text="카테고리">
-            <input name="category" defaultValue={insight?.category ?? ""} className={input} />
+            <select name="category" defaultValue={insight?.category ?? ""} className={input}>
+              <option value="">— 선택 —</option>
+              {INSIGHT_CATEGORIES.map((c) => (
+                <option key={c.value} value={c.value}>{c.label}</option>
+              ))}
+            </select>
           </Field>
           <Field text="정렬 순서">
             <input name="sort_order" type="number" defaultValue={insight?.sort_order ?? 0} className={input} />
@@ -270,26 +293,57 @@ function InsightForm({ insight }: { insight?: Insight }) {
         <Field text="제목">
           <input name="title" defaultValue={insight?.title} required className={input} />
         </Field>
-        <Field text="요약">
+        <Field text="요약 (목록에 표시되는 한 줄 설명)">
           <input name="summary" defaultValue={insight?.summary ?? ""} className={input} />
         </Field>
-        <Field text="본문 (전문 내용 — 줄바꿈 지원)">
-          <textarea name="body" defaultValue={insight?.body ?? ""} rows={8} className={input} />
+        <Field text="작성자">
+          <input name="author" defaultValue={insight?.author ?? ""} className={input} />
         </Field>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <Field text="작성자">
-            <input name="author" defaultValue={insight?.author ?? ""} className={input} />
-          </Field>
-          <Field text="게시일">
-            <input
-              name="published_on"
-              type="date"
-              defaultValue={insight?.published_on ? String(insight.published_on).slice(0, 10) : ""}
-              className={input}
-            />
-          </Field>
-        </div>
-        <ImagePicker name="image" current={insight?.image_url} text="대표 이미지" />
+        <Field text="게시일">
+          <input
+            name="published_on"
+            type="date"
+            defaultValue={insight?.published_on ? String(insight.published_on).slice(0, 10) : ""}
+            className={input}
+          />
+        </Field>
+
+        <ImagePicker name="image" current={insight?.image_url} text="대표 썸네일 이미지" />
+
+        {/* 다중 이미지 업로드 */}
+        <Field text="본문 이미지 (여러 장 선택 가능 — JPG, PNG, WEBP)">
+          <input
+            type="file"
+            name="images"
+            accept="image/jpeg,image/jpg,image/png,image/webp"
+            multiple
+            onChange={handleExtraFiles}
+            className="text-sm file:mr-3 file:rounded-lg file:border-0 file:bg-muted file:px-3 file:py-2 file:text-sm file:font-medium"
+          />
+          {extraPreviews.length > 0 && (
+            <div className="mt-2 flex flex-wrap gap-2">
+              {extraPreviews.map((url, i) => (
+                <img
+                  key={i}
+                  src={url}
+                  alt={`미리보기 ${i + 1}`}
+                  className="h-20 w-20 rounded-lg object-cover border border-border"
+                />
+              ))}
+            </div>
+          )}
+        </Field>
+
+        {/* 리치 텍스트 에디터 */}
+        <Field text="본문 (굵게·기울임·목록 지원)">
+          <RichTextEditor
+            value={bodyHtml}
+            onChange={setBodyHtml}
+            placeholder="본문 내용을 입력하세요..."
+          />
+        </Field>
+        {/* hidden body — form action에서 덮어씌움 */}
+        <input type="hidden" name="body" value={bodyHtml} />
       </form>
 
       <div className="flex items-center justify-between pt-1">
@@ -312,7 +366,7 @@ function HomeSettingsForm({ settings }: { settings: SiteSettings }) {
   return (
     <div className="overflow-hidden rounded-2xl border border-primary/40 bg-card shadow-sm">
       <div className="px-5 py-4">
-        <p className="font-bold text-primary">홈 화면 텍스트 설정</p>
+        <p className="font-bold text-primary">홈 화면 텍스트 ���정</p>
         <p className="text-xs text-muted-foreground">저장 후 즉시 홈 화면에 반영됩니다.</p>
       </div>
       <div className="border-t border-border px-5 py-5">

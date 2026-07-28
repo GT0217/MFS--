@@ -30,13 +30,23 @@ async function maybeUpload(file: FormDataEntryValue | null): Promise<string | nu
   if (!file || typeof file === "string") return null
   const f = file as File
   if (!f.size) return null
-  const ext = f.name.split(".").pop() || "png"
-  const blob = await put(`mfs/${Date.now()}-${ext}`, f, {
+  const rawExt = (f.name.split(".").pop() || "").toLowerCase()
+  const ext = rawExt && rawExt.length <= 5 ? rawExt : "jpg"
+  const blob = await put(`mfs/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`, f, {
     access: "public",
-    addRandomSuffix: true,
+    contentType: f.type || "image/jpeg",
     token: process.env.BLOB_READ_WRITE_TOKEN,
   })
   return blob.url
+}
+
+async function uploadMultiple(files: FormDataEntryValue[]): Promise<string[]> {
+  const urls: string[] = []
+  for (const file of files) {
+    const url = await maybeUpload(file)
+    if (url) urls.push(url)
+  }
+  return urls
 }
 
 async function safeDelBlob(url: string | null) {
@@ -169,12 +179,17 @@ export async function saveInsight(formData: FormData) {
   const type = str(formData.get("type")) || "칼럼"
   const category = str(formData.get("category")) || null
   const summary = str(formData.get("summary")) || null
+  // body는 HTML 문자열로 저장 (Quill 에디터 출력)
   const body = str(formData.get("body")) || null
   const author = str(formData.get("author")) || null
   const publishedOn = str(formData.get("published_on")) || null
   const sortOrder = num(formData.get("sort_order"))
 
+  // 단일 대표 이미지
   const uploaded = await maybeUpload(formData.get("image"))
+  // 다중 추가 이미지
+  const extraFiles = formData.getAll("images")
+  const extraUrls = await uploadMultiple(extraFiles)
 
   if (id) {
     if (uploaded) {
@@ -186,25 +201,25 @@ export async function saveInsight(formData: FormData) {
       await getPool().query(
         `UPDATE insights
          SET type=$1, category=$2, title=$3, summary=$4, body=$5, author=$6,
-             published_on=$7, sort_order=$8, image_url=$9
-         WHERE id=$10`,
-        [type, category, title, summary, body, author, publishedOn || null, sortOrder, uploaded, id],
+             published_on=$7, sort_order=$8, image_url=$9, image_urls=$10::text[]
+         WHERE id=$11`,
+        [type, category, title, summary, body, author, publishedOn || null, sortOrder, uploaded, extraUrls, id],
       )
     } else {
       await getPool().query(
         `UPDATE insights
          SET type=$1, category=$2, title=$3, summary=$4, body=$5, author=$6,
-             published_on=$7, sort_order=$8
-         WHERE id=$9`,
-        [type, category, title, summary, body, author, publishedOn || null, sortOrder, id],
+             published_on=$7, sort_order=$8, image_urls=$9::text[]
+         WHERE id=$10`,
+        [type, category, title, summary, body, author, publishedOn || null, sortOrder, extraUrls, id],
       )
     }
   } else {
     await getPool().query(
       `INSERT INTO insights
-         (type, category, title, summary, body, author, published_on, sort_order, image_url)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
-      [type, category, title, summary, body, author, publishedOn || null, sortOrder, uploaded],
+         (type, category, title, summary, body, author, published_on, sort_order, image_url, image_urls)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10::text[])`,
+      [type, category, title, summary, body, author, publishedOn || null, sortOrder, uploaded, extraUrls],
     )
   }
   revalidateAll()
