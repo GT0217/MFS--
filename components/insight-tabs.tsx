@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { FileText, Megaphone, BarChart2, Globe, Layout, ChevronLeft, ChevronRight, Download } from "lucide-react"
+import { FileText, BarChart2, Globe, Layout, Megaphone, ChevronLeft, ChevronRight, Download } from "lucide-react"
 import type { Insight } from "@/lib/types"
 import { formatDate } from "@/lib/types"
 
@@ -9,6 +9,7 @@ const TABS = [
   { key: "국내 뱅킹 앱 분석", label: "국내 분석", icon: BarChart2 },
   { key: "해외 뱅킹 앱 분석", label: "해외 분석", icon: Globe },
   { key: "카드뉴스 소재", label: "카드뉴스", icon: Layout },
+  { key: "대외활동", label: "대외활동", icon: Megaphone },
 ] as const
 
 type TabKey = (typeof TABS)[number]["key"]
@@ -177,8 +178,9 @@ function InsightViewer({
   )
 }
 
-export function InsightTabs({ insights }: { insights: Insight[] }) {
-  const [tab, setTab] = useState<TabKey>("국내 뱅킹 앱 분석")
+export function InsightTabs({ insights, initialTab }: { insights: Insight[]; initialTab?: string }) {
+  const validInitial = TABS.find((t) => t.key === initialTab)?.key ?? "국내 뱅킹 앱 분석"
+  const [tab, setTab] = useState<TabKey>(validInitial as TabKey)
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null)
 
   const filtered = insights.filter((i) => i.category === tab)

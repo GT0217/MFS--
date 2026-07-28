@@ -27,6 +27,7 @@ export const INSIGHT_CATEGORIES = [
   { value: "국내 뱅킹 앱 분석", label: "국내 뱅킹 앱 분석" },
   { value: "해외 뱅킹 앱 분석", label: "해외 뱅킹 앱 분석" },
   { value: "카드뉴스 소재", label: "카드뉴스 소재" },
+  { value: "대외활동", label: "대외활동" },
 ] as const
 
 export type InsightCategory = (typeof INSIGHT_CATEGORIES)[number]["value"]

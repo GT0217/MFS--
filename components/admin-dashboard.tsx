@@ -271,13 +271,9 @@ function InsightForm({ insight }: { insight?: Insight }) {
         className="flex flex-col gap-4"
       >
         {insight ? <input type="hidden" name="id" value={insight.id} /> : null}
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-          <Field text="구분">
-            <select name="type" defaultValue={insight?.type ?? "칼럼"} className={input}>
-              <option value="칼럼">칼럼</option>
-              <option value="대외활동">대외활동</option>
-            </select>
-          </Field>
+        {/* type은 category 값과 동기화 — hidden으로 전달 */}
+        <input type="hidden" name="type" value="인사이트" />
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field text="카테고리">
             <select name="category" defaultValue={insight?.category ?? ""} className={input}>
               <option value="">— 선택 —</option>
