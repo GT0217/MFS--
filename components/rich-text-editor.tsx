@@ -1,20 +1,19 @@
 "use client"
 
+/**
+ * RichTextEditor — Quill + quill-image-resize-module-react
+ *
+ * 핵심 원칙:
+ *  - ImageResize 모듈은 Quill 클래스에 등록돼야 하므로,
+ *    ReactQuill 컴포넌트가 마운트되기 **전에** Quill.register() 완료가 필요.
+ *  - dynamic() 의 async loader 안에서 두 패키지를 순서대로 import 해
+ *    등록까지 완료한 뒤 래퍼 컴포넌트를 반환하는 방식이 유일하게 안정적.
+ *  - modules 객체는 컴포넌트 외부에서 한 번만 생성(참조 불변) — 
+ *    매 렌더마다 새 객체가 생기면 Quill이 툴바를 재생성하며 핸들러를 잃음.
+ */
+
 import dynamic from "next/dynamic"
-import { useRef, useMemo, useCallback, useEffect } from "react"
-
-// Quill은 window에 의존하므로 SSR 비활성화
-const ReactQuill = dynamic(() => import("react-quill-new"), { ssr: false })
-
-const FORMATS = [
-  "header",
-  "bold", "italic", "underline", "strike",
-  "list", "bullet",
-  "blockquote", "code-block",
-  "link",
-  "image",
-  "width", "style",
-]
+import { useRef, useCallback } from "react"
 
 interface RichTextEditorProps {
   value: string
@@ -22,191 +21,138 @@ interface RichTextEditorProps {
   placeholder?: string
 }
 
-/**
- * 이미지 선택 시 나타나는 정렬 미니툴바
- * DOM에 직접 삽입 — contentEditable="false"로 에디터 입력 차단
- */
-function buildImageToolbar(img: HTMLImageElement, quill: any) {
-  document.querySelectorAll(".mfs-img-toolbar").forEach((el) => el.remove())
+/* ────────────────────────────────────────────────────────── */
+/*  이미지 업로드 핸들러 — Quill 인스턴스를 인자로 받음        */
+/* ────────────────────────────────────────────────────────── */
+async function uploadAndInsert(quill: any) {
+  const input = document.createElement("input")
+  input.type = "file"
+  input.accept = "image/jpeg,image/jpg,image/png,image/webp,image/gif"
+  input.click()
 
-  const toolbar = document.createElement("div")
-  toolbar.className = "mfs-img-toolbar"
-  toolbar.contentEditable = "false"
+  input.onchange = async () => {
+    const file = input.files?.[0]
+    if (!file) return
 
-  const ALIGNS = [
-    { label: "◀ 왼쪽", style: "float:left;margin:0 1rem 0.5rem 0;" },
-    { label: "■ 중앙",  style: "display:block;float:none;margin:0.75rem auto;" },
-    { label: "오른쪽 ▶", style: "float:right;margin:0 0 0.5rem 1rem;" },
-  ]
+    const range = quill.getSelection(true)
+    const PLACEHOLDER = "이미지 업로드 중..."
+    quill.insertText(range.index, PLACEHOLDER, { color: "#9ca3af", italic: true })
 
-  ALIGNS.forEach(({ label, style }) => {
-    const btn = document.createElement("button")
-    btn.type = "button"
-    btn.textContent = label
-    btn.addEventListener("mousedown", (e) => {
-      e.preventDefault()
-      const cur = img.getAttribute("style") || ""
-      const cleaned = cur
-        .replace(/float\s*:\s*[^;]+;?/g, "")
-        .replace(/display\s*:\s*[^;]+;?/g, "")
-        .replace(/margin\s*:\s*[^;]+;?/g, "")
-        .trim()
-        .replace(/;$/, "")
-      img.setAttribute("style", [cleaned, style].filter(Boolean).join(";"))
-      quill.update()
-      toolbar.querySelectorAll("button").forEach((b) => b.classList.remove("active"))
-      btn.classList.add("active")
-    })
-    toolbar.appendChild(btn)
-  })
+    try {
+      const fd = new FormData()
+      fd.append("file", file)
+      const res = await fetch("/api/upload-image", { method: "POST", body: fd })
+      const data = await res.json()
+      if (!data.url) throw new Error("no url")
 
-  img.parentNode?.insertBefore(toolbar, img)
+      quill.deleteText(range.index, PLACEHOLDER.length)
+      quill.insertEmbed(range.index, "image", data.url)
+      quill.setSelection(range.index + 1, 0)
+    } catch {
+      quill.deleteText(range.index, PLACEHOLDER.length)
+      alert("이미지 업로드에 실패했습니다.")
+    }
+  }
 }
 
-export function RichTextEditor({ value, onChange, placeholder }: RichTextEditorProps) {
-  const containerRef = useRef<HTMLDivElement>(null)
-  const resizeRegistered = useRef(false)
+/* ────────────────────────────────────────────────────────── */
+/*  dynamic() — Quill 로드 → ImageResize 등록 → 컴포넌트 반환 */
+/* ────────────────────────────────────────────────────────── */
+const QuillWithResize = dynamic(
+  async () => {
+    // 1) react-quill-new 로드 (내부적으로 quill v2 번들)
+    const { default: ReactQuill, Quill } = await import("react-quill-new")
 
-  const getQuill = useCallback(() => {
-    const el = containerRef.current?.querySelector(".ql-container") as any
-    return el?.__quill ?? null
-  }, [])
-
-  // ImageResize 모듈을 window.Quill에 등록 (클라이언트 전용, 한 번만)
-  useEffect(() => {
-    if (resizeRegistered.current) return
-
-    const timer = setTimeout(async () => {
-      const quill = getQuill()
-      if (!quill) return
-
-      try {
-        // Quill 전역 인스턴스 확인
-        const Q = (window as any).Quill
-        if (!Q) return
-
-        if (!Q.__resizeRegistered) {
-          const { default: ImageResize } = await import("quill-image-resize-module-react")
-          Q.register("modules/imageResize", ImageResize)
-          Q.__resizeRegistered = true
-        }
-
-        resizeRegistered.current = true
-      } catch {
-        // 이미 등록된 경우 무시
-      }
-    }, 600)
-
-    return () => clearTimeout(timer)
-  }, [getQuill])
-
-  // 이미지 클릭 → 정렬 툴바 표시
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      const quill = getQuill()
-      if (!quill) return
-
-      const editor = quill.root as HTMLElement
-
-      const handleClick = (e: MouseEvent) => {
-        const target = e.target as HTMLElement
-        if (target.tagName === "IMG") {
-          buildImageToolbar(target as HTMLImageElement, quill)
-        } else if (!target.closest(".mfs-img-toolbar")) {
-          document.querySelectorAll(".mfs-img-toolbar").forEach((el) => el.remove())
-        }
-      }
-
-      const handleOutsideClick = (e: MouseEvent) => {
-        if (!(e.target as HTMLElement).closest?.(".ql-editor, .mfs-img-toolbar")) {
-          document.querySelectorAll(".mfs-img-toolbar").forEach((el) => el.remove())
-        }
-      }
-
-      editor.addEventListener("click", handleClick)
-      document.addEventListener("click", handleOutsideClick)
-
-      return () => {
-        editor.removeEventListener("click", handleClick)
-        document.removeEventListener("click", handleOutsideClick)
-        document.querySelectorAll(".mfs-img-toolbar").forEach((el) => el.remove())
-      }
-    }, 800)
-
-    return () => clearTimeout(timer)
-  }, [getQuill])
-
-  // 이미지 커스텀 핸들러: 파일 선택 → /api/upload-image → Quill에 URL 삽입
-  const imageHandler = useCallback(() => {
-    const input = document.createElement("input")
-    input.setAttribute("type", "file")
-    input.setAttribute("accept", "image/jpeg,image/jpg,image/png,image/webp,image/gif")
-    input.click()
-
-    input.onchange = async () => {
-      const file = input.files?.[0]
-      if (!file) return
-
-      const quill = getQuill()
-      if (!quill) return
-
-      const range = quill.getSelection(true)
-      const placeholder_text = "이미지 업로드 중..."
-      quill.insertText(range.index, placeholder_text, "color", "#9ca3af")
-
-      try {
-        const fd = new FormData()
-        fd.append("file", file)
-        const res = await fetch("/api/upload-image", { method: "POST", body: fd })
-        const data = await res.json()
-        if (!data.url) throw new Error("No URL")
-
-        quill.deleteText(range.index, placeholder_text.length)
-        quill.insertEmbed(range.index, "image", data.url)
-        // 기본 너비 설정: 삽입 직후 img 태그에 width 적용
-        setTimeout(() => {
-          const imgs = quill.root.querySelectorAll(`img[src="${data.url}"]`)
-          const lastImg = imgs[imgs.length - 1] as HTMLImageElement | undefined
-          if (lastImg && !lastImg.style.width) {
-            lastImg.setAttribute("style", "width:100%;max-width:100%;display:block;margin:0.75rem auto;")
-          }
-        }, 100)
-        quill.setSelection(range.index + 1, 0)
-      } catch {
-        quill.deleteText(range.index, placeholder_text.length)
-        alert("이미지 업로드에 실패했습니다.")
-      }
+    // 2) quill-image-resize-module-react 를 동일 Quill 클래스에 등록
+    //    true = 기존 등록 덮어쓰기 허용 (HMR 재등록 에러 방지)
+    try {
+      const { default: ImageResize } = await import("quill-image-resize-module-react")
+      Quill.register("modules/imageResize", ImageResize, true)
+    } catch {
+      // 등록 실패해도 에디터는 동작 (리사이즈만 비활성)
     }
-  }, [getQuill])
 
-  const modules = useMemo(() => ({
-    toolbar: {
-      container: [
-        [{ header: [1, 2, 3, false] }],
-        ["bold", "italic", "underline", "strike"],
-        [{ list: "ordered" }, { list: "bullet" }],
-        ["blockquote", "code-block"],
-        ["link", "image"],
-        ["clean"],
-      ],
-      handlers: { image: imageHandler },
-    },
-    imageResize: {
-      // 리사이즈 모듈 옵션 — modules/imageResize 등록 후 적용됨
-      parchment: (window as any)?.Quill?.import?.("parchment"),
-    },
-  }), [imageHandler])
+    // 3) modules 를 이 스코프에서 한 번만 생성 — imageHandler 도 여기서 클로저
+    const modules = {
+      toolbar: {
+        container: [
+          [{ header: [1, 2, 3, false] }],
+          ["bold", "italic", "underline", "strike"],
+          [{ list: "ordered" }, { list: "bullet" }],
+          ["blockquote"],
+          ["link", "image"],
+          ["clean"],
+        ],
+        handlers: {
+          image() {
+            // this 컨텍스트: Quill toolbar 인스턴스 → this.quill 로 인스턴스 접근
+            uploadAndInsert((this as any).quill)
+          },
+        },
+      },
+      imageResize: {
+        // Resize: 드래그 핸들, DisplaySize: 크기 표시 라벨, Toolbar: 정렬 버튼
+        modules: ["Resize", "DisplaySize", "Toolbar"],
+        handleStyles: {
+          backgroundColor: "#5ba832",
+          border: "2px solid white",
+          borderRadius: "50%",
+          width: "12px",
+          height: "12px",
+        },
+        displayStyles: {
+          backgroundColor: "#5ba832",
+          color: "#fff",
+          fontSize: "11px",
+          borderRadius: "4px",
+          padding: "2px 6px",
+        },
+      },
+    }
 
+    const formats = [
+      "header",
+      "bold", "italic", "underline", "strike",
+      "list",
+      "blockquote",
+      "link",
+      "image",
+    ]
+
+    // 4) 실제 렌더 컴포넌트 반환
+    function Editor({
+      value,
+      onChange,
+      placeholder,
+    }: {
+      value: string
+      onChange: (v: string) => void
+      placeholder?: string
+    }) {
+      return (
+        <ReactQuill
+          theme="snow"
+          value={value}
+          onChange={onChange}
+          modules={modules}
+          formats={formats}
+          placeholder={placeholder ?? "내용을 입력하세요..."}
+        />
+      )
+    }
+
+    return Editor
+  },
+  { ssr: false },
+)
+
+/* ────────────────────────────────────────────────────────── */
+/*  공개 컴포넌트                                              */
+/* ────────────────────────────────────────────────────────── */
+export function RichTextEditor({ value, onChange, placeholder }: RichTextEditorProps) {
   return (
-    <div ref={containerRef} className="rounded-lg border border-border text-sm">
-      <ReactQuill
-        theme="snow"
-        value={value}
-        onChange={onChange}
-        modules={modules}
-        formats={FORMATS}
-        placeholder={placeholder ?? "내용을 입력하세요..."}
-      />
+    <div className="rounded-lg border border-border text-sm overflow-hidden">
+      <QuillWithResize value={value} onChange={onChange} placeholder={placeholder} />
     </div>
   )
 }

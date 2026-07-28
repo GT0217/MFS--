@@ -150,32 +150,28 @@ body {
 }
 
 /* ── Quill ImageResize 모듈 핸들 스타일 ── */
-/* 이미지 선택 시 표시되는 리사이즈 박스 */
-.image-resize-container {
-  position: absolute;
-  box-sizing: border-box;
-  border: 2px solid var(--color-primary) !important;
-  border-radius: 4px;
-  pointer-events: none;
-  z-index: 30;
+/* quill-image-resize-module-react 는 body에 div를 직접 추가하므로 position:fixed 오버레이 */
+/* 모듈이 생성하는 오버레이 박스 */
+.quill-resize-overlay {
+  border: 2px solid #5ba832 !important;
+  border-radius: 3px !important;
 }
 
-/* 네 모서리 핸들 */
-.image-resize-container .handle {
+/* 리사이즈 핸들 */
+.quill-resize-handle {
   width: 12px !important;
   height: 12px !important;
-  border-radius: 50% !important;
-  background: var(--color-primary) !important;
+  background: #5ba832 !important;
   border: 2px solid #fff !important;
-  box-shadow: 0 0 3px rgba(0,0,0,0.3) !important;
-  pointer-events: all !important;
-  cursor: nwse-resize !important;
+  border-radius: 50% !important;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.3) !important;
 }
 
-/* 리사이즈 중인 이미지 */
-.ql-editor img.selected-image {
-  outline: 2px solid var(--color-primary);
+/* 선택된 이미지 강조 */
+.ql-editor img.selected {
+  outline: 2px solid #5ba832;
   outline-offset: 2px;
+  border-radius: 4px;
 }
 
 /* Quill editor overrides */
