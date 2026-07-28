@@ -1,50 +1,40 @@
 "use client"
 
 /**
- * RichTextEditor — Quill + quill-image-resize-module-react
+ * RichTextEditor — Quill + 순수 React 이미지 리사이즈 구현
  *
- * 핵심 원칙:
- *  - ImageResize 모듈은 Quill 클래스에 등록돼야 하므로,
- *    ReactQuill 컴포넌트가 마운트되기 **전에** Quill.register() 완료가 필요.
- *  - dynamic() 의 async loader 안에서 두 패키지를 순서대로 import 해
- *    등록까지 완료한 뒤 래퍼 컴포넌트를 반환하는 방식이 유일하게 안정적.
- *  - modules 객체는 컴포넌트 외부에서 한 번만 생성(참조 불변) — 
- *    매 렌더마다 새 객체가 생기면 Quill이 툴바를 재생성하며 핸들러를 잃음.
+ * quill-image-resize-module-react는 Quill v2(parchment) 호환 문제로 제거.
+ * 대신 MutationObserver로 .ql-editor 내 이미지를 감시하고,
+ * React 포털 없이 wrapper div에 절대좌표 핸들을 직접 렌더링.
  */
 
 import dynamic from "next/dynamic"
-import { useRef, useCallback } from "react"
+import { useRef, useState, useEffect, useCallback } from "react"
 
-interface RichTextEditorProps {
+export interface RichTextEditorProps {
   value: string
   onChange: (value: string) => void
   placeholder?: string
 }
 
-/* ────────────────────────────────────────────────────────── */
-/*  이미지 업로드 핸들러 — Quill 인스턴스를 인자로 받음        */
-/* ────────────────────────────────────────────────────────── */
+/* ── 이미지 업로드 핸들러 ── */
 async function uploadAndInsert(quill: any) {
   const input = document.createElement("input")
   input.type = "file"
   input.accept = "image/jpeg,image/jpg,image/png,image/webp,image/gif"
   input.click()
-
   input.onchange = async () => {
     const file = input.files?.[0]
     if (!file) return
-
     const range = quill.getSelection(true)
-    const PLACEHOLDER = "이미지 업로드 중..."
+    const PLACEHOLDER = "업로드 중..."
     quill.insertText(range.index, PLACEHOLDER, { color: "#9ca3af", italic: true })
-
     try {
       const fd = new FormData()
       fd.append("file", file)
       const res = await fetch("/api/upload-image", { method: "POST", body: fd })
       const data = await res.json()
       if (!data.url) throw new Error("no url")
-
       quill.deleteText(range.index, PLACEHOLDER.length)
       quill.insertEmbed(range.index, "image", data.url)
       quill.setSelection(range.index + 1, 0)
@@ -55,104 +45,297 @@ async function uploadAndInsert(quill: any) {
   }
 }
 
-/* ────────────────────────────────────────────────────────── */
-/*  dynamic() — Quill 로드 → ImageResize 등록 → 컴포넌트 반환 */
-/* ────────────────────────────────────────────────────────── */
-const QuillWithResize = dynamic(
+/* ── ReactQuill dynamic import (SSR 비활성) ── */
+const ReactQuill = dynamic(
   async () => {
-    // 1) react-quill-new 로드 (내부적으로 quill v2 번들)
-    const { default: ReactQuill, Quill } = await import("react-quill-new")
-
-    // 2) quill-image-resize-module-react 를 동일 Quill 클래스에 등록
-    //    true = 기존 등록 덮어쓰기 허용 (HMR 재등록 에러 방지)
-    try {
-      const { default: ImageResize } = await import("quill-image-resize-module-react")
-      Quill.register("modules/imageResize", ImageResize, true)
-    } catch {
-      // 등록 실패해도 에디터는 동작 (리사이즈만 비활성)
-    }
-
-    // 3) modules 를 이 스코프에서 한 번만 생성 — imageHandler 도 여기서 클로저
-    const modules = {
-      toolbar: {
-        container: [
-          [{ header: [1, 2, 3, false] }],
-          ["bold", "italic", "underline", "strike"],
-          [{ list: "ordered" }, { list: "bullet" }],
-          ["blockquote"],
-          ["link", "image"],
-          ["clean"],
-        ],
-        handlers: {
-          image() {
-            // this 컨텍스트: Quill toolbar 인스턴스 → this.quill 로 인스턴스 접근
-            uploadAndInsert((this as any).quill)
-          },
-        },
-      },
-      imageResize: {
-        // Resize: 드래그 핸들, DisplaySize: 크기 표시 라벨, Toolbar: 정렬 버튼
-        modules: ["Resize", "DisplaySize", "Toolbar"],
-        handleStyles: {
-          backgroundColor: "#5ba832",
-          border: "2px solid white",
-          borderRadius: "50%",
-          width: "12px",
-          height: "12px",
-        },
-        displayStyles: {
-          backgroundColor: "#5ba832",
-          color: "#fff",
-          fontSize: "11px",
-          borderRadius: "4px",
-          padding: "2px 6px",
-        },
-      },
-    }
-
-    const formats = [
-      "header",
-      "bold", "italic", "underline", "strike",
-      "list",
-      "blockquote",
-      "link",
-      "image",
-    ]
-
-    // 4) 실제 렌더 컴포넌트 반환
-    function Editor({
-      value,
-      onChange,
-      placeholder,
-    }: {
-      value: string
-      onChange: (v: string) => void
-      placeholder?: string
-    }) {
-      return (
-        <ReactQuill
-          theme="snow"
-          value={value}
-          onChange={onChange}
-          modules={modules}
-          formats={formats}
-          placeholder={placeholder ?? "내용을 입력하세요..."}
-        />
-      )
-    }
-
-    return Editor
+    const { default: RQ } = await import("react-quill-new")
+    return RQ
   },
   { ssr: false },
 )
 
-/* ────────────────────────────────────────────────────────── */
-/*  공개 컴포넌트                                              */
-/* ────────────────────────────────────────────────────────── */
-export function RichTextEditor({ value, onChange, placeholder }: RichTextEditorProps) {
+/* ── 리사이즈 핸들 위치 타입 ── */
+interface HandlePos {
+  top: number
+  left: number
+  width: number
+  height: number
+  imgEl: HTMLImageElement
+}
+
+/* ── modules는 컴포넌트 외부에서 한 번만 생성 (참조 불변) ── */
+let _modules: any = null
+let _formats: string[] | null = null
+
+function getModulesAndFormats() {
+  if (_modules) return { modules: _modules, formats: _formats! }
+  _modules = {
+    toolbar: {
+      container: [
+        [{ header: [1, 2, 3, false] }],
+        ["bold", "italic", "underline", "strike"],
+        [{ color: [] }, { background: [] }],
+        [{ list: "ordered" }, { list: "bullet" }],
+        ["blockquote", "link", "image"],
+        ["clean"],
+      ],
+      handlers: {
+        image() {
+          uploadAndInsert((this as any).quill)
+        },
+      },
+    },
+  }
+  _formats = [
+    "header", "bold", "italic", "underline", "strike",
+    "color", "background",
+    "list", "blockquote", "link", "image",
+  ]
+  return { modules: _modules, formats: _formats }
+}
+
+/* ── 이미지 리사이즈 핸들 컴포넌트 ── */
+function ResizeHandles({
+  pos,
+  onResize,
+  onAlign,
+  onDeselect,
+}: {
+  pos: HandlePos
+  onResize: (newWidth: number) => void
+  onAlign: (style: string) => void
+  onDeselect: () => void
+}) {
+  const startRef = useRef<{ x: number; w: number; corner: string } | null>(null)
+
+  const corners = [
+    { key: "nw", style: { top: -6, left: -6, cursor: "nw-resize" } },
+    { key: "ne", style: { top: -6, left: pos.width - 6, cursor: "ne-resize" } },
+    { key: "sw", style: { top: pos.height - 6, left: -6, cursor: "sw-resize" } },
+    { key: "se", style: { top: pos.height - 6, left: pos.width - 6, cursor: "se-resize" } },
+  ]
+
+  const onMouseDown = useCallback(
+    (e: React.MouseEvent, corner: string) => {
+      e.preventDefault()
+      e.stopPropagation()
+      startRef.current = { x: e.clientX, w: pos.width, corner }
+
+      const onMove = (ev: MouseEvent) => {
+        if (!startRef.current) return
+        const dx = ev.clientX - startRef.current.x
+        const mult = corner.endsWith("e") ? 1 : -1
+        const newW = Math.max(40, startRef.current.w + dx * mult)
+        onResize(Math.round(newW))
+      }
+      const onUp = () => {
+        startRef.current = null
+        window.removeEventListener("mousemove", onMove)
+        window.removeEventListener("mouseup", onUp)
+      }
+      window.addEventListener("mousemove", onMove)
+      window.addEventListener("mouseup", onUp)
+    },
+    [pos.width, onResize],
+  )
+
   return (
-    <div className="rounded-lg border border-border text-sm overflow-hidden">
-      <QuillWithResize value={value} onChange={onChange} placeholder={placeholder} />
+    <>
+      {/* 오버레이 박스 */}
+      <div
+        style={{
+          position: "absolute",
+          top: pos.top,
+          left: pos.left,
+          width: pos.width,
+          height: pos.height,
+          border: "2px solid #5ba832",
+          borderRadius: 4,
+          boxSizing: "border-box",
+          pointerEvents: "none",
+          zIndex: 10,
+        }}
+      />
+      {/* 정렬 미니 툴바 */}
+      <div
+        style={{
+          position: "absolute",
+          top: pos.top - 34,
+          left: pos.left,
+          zIndex: 20,
+          display: "flex",
+          gap: 4,
+          background: "#1f2937",
+          padding: "3px 6px",
+          borderRadius: 7,
+          boxShadow: "0 2px 8px rgba(0,0,0,0.25)",
+        }}
+        onMouseDown={(e) => e.preventDefault()}
+      >
+        {[
+          { label: "◀ 왼쪽", style: "float:left;margin:0 12px 8px 0;" },
+          { label: "▣ 중앙", style: "display:block;margin:8px auto;" },
+          { label: "오른쪽 ▶", style: "float:right;margin:0 0 8px 12px;" },
+        ].map(({ label, style }) => (
+          <button
+            key={label}
+            type="button"
+            onMouseDown={(e) => { e.preventDefault(); onAlign(style) }}
+            style={{
+              fontSize: 10,
+              fontWeight: 600,
+              color: "#e5e7eb",
+              background: "transparent",
+              border: "1px solid #374151",
+              borderRadius: 5,
+              padding: "2px 7px",
+              cursor: "pointer",
+              whiteSpace: "nowrap",
+            }}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+      {/* 네 모서리 핸들 */}
+      {corners.map(({ key, style }) => (
+        <div
+          key={key}
+          onMouseDown={(e) => onMouseDown(e, key)}
+          style={{
+            position: "absolute",
+            top: pos.top + (style.top as number),
+            left: pos.left + (style.left as number),
+            width: 12,
+            height: 12,
+            background: "#5ba832",
+            border: "2px solid #fff",
+            borderRadius: "50%",
+            cursor: style.cursor as string,
+            zIndex: 20,
+            boxSizing: "border-box",
+            boxShadow: "0 1px 4px rgba(0,0,0,0.3)",
+          }}
+        />
+      ))}
+      {/* 외부 클릭 감지용 투명 오버레이 */}
+      <div
+        style={{ position: "fixed", inset: 0, zIndex: 9 }}
+        onMouseDown={onDeselect}
+      />
+    </>
+  )
+}
+
+/* ── 메인 에디터 컴포넌트 ── */
+export function RichTextEditor({ value, onChange, placeholder }: RichTextEditorProps) {
+  const wrapperRef = useRef<HTMLDivElement>(null)
+  const [handlePos, setHandlePos] = useState<HandlePos | null>(null)
+
+  const { modules, formats } = getModulesAndFormats()
+
+  /* 이미지 클릭 → 핸들 위치 계산 */
+  const selectImage = useCallback((img: HTMLImageElement) => {
+    const wrapper = wrapperRef.current
+    if (!wrapper) return
+    const wRect = wrapper.getBoundingClientRect()
+    const iRect = img.getBoundingClientRect()
+    setHandlePos({
+      top: iRect.top - wRect.top + wrapper.scrollTop,
+      left: iRect.left - wRect.left,
+      width: iRect.width,
+      height: iRect.height,
+      imgEl: img,
+    })
+  }, [])
+
+  /* .ql-editor 내 이미지 클릭 이벤트 위임 */
+  useEffect(() => {
+    const wrapper = wrapperRef.current
+    if (!wrapper) return
+    const handler = (e: MouseEvent) => {
+      const target = e.target as HTMLElement
+      if (target.tagName === "IMG" && wrapper.contains(target)) {
+        e.stopPropagation()
+        selectImage(target as HTMLImageElement)
+      }
+    }
+    wrapper.addEventListener("mousedown", handler)
+    return () => wrapper.removeEventListener("mousedown", handler)
+  }, [selectImage])
+
+  /* 이미지 크기 변경 */
+  const handleResize = useCallback(
+    (newWidth: number) => {
+      if (!handlePos) return
+      const img = handlePos.imgEl
+      const currentStyle = img.getAttribute("style") || ""
+      // float/margin 유지하면서 width만 교체
+      const withoutWidth = currentStyle.replace(/width\s*:[^;]+;?/gi, "").trim()
+      img.setAttribute("style", `${withoutWidth ? withoutWidth + ";" : ""}width:${newWidth}px;`)
+      // Quill HTML 강제 동기화
+      const editor = img.closest(".ql-editor") as HTMLElement | null
+      if (editor) {
+        // quill-new exposes __quill on the container
+        const container = editor.parentElement
+        const quillInstance = (container as any)?.__quill
+        if (quillInstance) {
+          quillInstance.update()
+          onChange(quillInstance.root.innerHTML)
+        }
+      }
+      selectImage(img)
+    },
+    [handlePos, onChange, selectImage],
+  )
+
+  /* 정렬 스타일 변경 */
+  const handleAlign = useCallback(
+    (alignStyle: string) => {
+      if (!handlePos) return
+      const img = handlePos.imgEl
+      const currentStyle = img.getAttribute("style") || ""
+      // float/display/margin 제거 후 새 정렬 적용, width는 유지
+      const widthMatch = currentStyle.match(/width\s*:[^;]+;?/i)
+      const widthStr = widthMatch ? widthMatch[0].replace(/;$/, "") : ""
+      const combined = [widthStr, alignStyle].filter(Boolean).join(";")
+      img.setAttribute("style", combined)
+      const editor = img.closest(".ql-editor") as HTMLElement | null
+      if (editor) {
+        const container = editor.parentElement
+        const quillInstance = (container as any)?.__quill
+        if (quillInstance) {
+          quillInstance.update()
+          onChange(quillInstance.root.innerHTML)
+        }
+      }
+      selectImage(img)
+    },
+    [handlePos, onChange, selectImage],
+  )
+
+  return (
+    <div
+      ref={wrapperRef}
+      className="rounded-lg border border-border overflow-visible text-sm"
+      style={{ position: "relative" }}
+    >
+      <ReactQuill
+        theme="snow"
+        value={value}
+        onChange={onChange}
+        modules={modules}
+        formats={formats}
+        placeholder={placeholder ?? "내용을 입력하세요..."}
+      />
+      {handlePos && (
+        <ResizeHandles
+          pos={handlePos}
+          onResize={handleResize}
+          onAlign={handleAlign}
+          onDeselect={() => setHandlePos(null)}
+        />
+      )}
     </div>
   )
 }
