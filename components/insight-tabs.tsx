@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef, useCallback } from "react"
 import { FileText, ChevronLeft, ChevronRight, Download } from "lucide-react"
 import type { Insight, InsightCategoryRow } from "@/lib/types"
 import { formatDate, INSIGHT_CATEGORIES } from "@/lib/types"
@@ -196,6 +196,40 @@ export function InsightTabs({
   const [tab, setTab] = useState<TabKey>(validInitial)
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null)
 
+  // 탭 스크롤 화살표
+  const scrollRef = useRef<HTMLDivElement>(null)
+  const [canScrollLeft, setCanScrollLeft] = useState(false)
+  const [canScrollRight, setCanScrollRight] = useState(false)
+
+  const checkScroll = useCallback(() => {
+    const el = scrollRef.current
+    if (!el) return
+    setCanScrollLeft(el.scrollLeft > 4)
+    setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 4)
+  }, [])
+
+  useEffect(() => {
+    checkScroll()
+    const el = scrollRef.current
+    if (!el) return
+    el.addEventListener("scroll", checkScroll, { passive: true })
+    const ro = new ResizeObserver(checkScroll)
+    ro.observe(el)
+    return () => { el.removeEventListener("scroll", checkScroll); ro.disconnect() }
+  }, [checkScroll, tabs])
+
+  const scrollBy = (dir: "left" | "right") => {
+    scrollRef.current?.scrollBy({ left: dir === "left" ? -160 : 160, behavior: "smooth" })
+  }
+
+  // 탭 변경 시 해당 버튼이 보이도록 스크롤
+  useEffect(() => {
+    const el = scrollRef.current
+    if (!el) return
+    const btn = el.querySelector<HTMLButtonElement>(`[data-tab="${tab}"]`)
+    btn?.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "nearest" })
+  }, [tab])
+
   const filtered = insights.filter((i) => i.category === tab)
   const selectedInsight = selectedIndex !== null ? filtered[selectedIndex] : null
 
@@ -208,23 +242,54 @@ export function InsightTabs({
 
   return (
     <div>
-      {/* 탭 버튼 — 3종 카테고리 */}
-      <div className="flex gap-1 overflow-x-auto no-scrollbar">
-        {tabs.map((t) => {
-          const active = tab === t.key
-          return (
-            <button
-              key={t.key}
-              type="button"
-              onClick={() => { setTab(t.key); setSelectedIndex(null) }}
-              className={`flex shrink-0 items-center rounded-full px-4 py-2 text-sm font-semibold transition-colors ${
-                active ? "bg-primary text-primary-foreground shadow-sm" : "bg-muted text-muted-foreground"
-              }`}
-            >
-              {t.label}
-            </button>
-          )
-        })}
+      {/* 탭 바 — 좌우 화살표 + 스크롤 */}
+      <div className="relative flex items-center gap-1">
+        {/* 왼쪽 화살표 */}
+        <button
+          type="button"
+          onClick={() => scrollBy("left")}
+          aria-label="이전 탭"
+          className={`shrink-0 flex h-8 w-8 items-center justify-center rounded-full border border-border bg-card shadow-sm transition-all hover:bg-muted ${
+            canScrollLeft ? "opacity-100" : "pointer-events-none opacity-0"
+          }`}
+        >
+          <ChevronLeft className="h-4 w-4 text-foreground" aria-hidden="true" />
+        </button>
+
+        {/* 탭 스크롤 영역 */}
+        <div
+          ref={scrollRef}
+          className="flex flex-1 gap-1.5 overflow-x-auto no-scrollbar scroll-smooth"
+        >
+          {tabs.map((t) => {
+            const active = tab === t.key
+            return (
+              <button
+                key={t.key}
+                data-tab={t.key}
+                type="button"
+                onClick={() => { setTab(t.key); setSelectedIndex(null) }}
+                className={`flex shrink-0 items-center rounded-full px-4 py-2 text-sm font-semibold transition-colors ${
+                  active ? "bg-primary text-primary-foreground shadow-sm" : "bg-muted text-muted-foreground hover:bg-muted/80"
+                }`}
+              >
+                {t.label}
+              </button>
+            )
+          })}
+        </div>
+
+        {/* 오른쪽 화살표 */}
+        <button
+          type="button"
+          onClick={() => scrollBy("right")}
+          aria-label="다음 탭"
+          className={`shrink-0 flex h-8 w-8 items-center justify-center rounded-full border border-border bg-card shadow-sm transition-all hover:bg-muted ${
+            canScrollRight ? "opacity-100" : "pointer-events-none opacity-0"
+          }`}
+        >
+          <ChevronRight className="h-4 w-4 text-foreground" aria-hidden="true" />
+        </button>
       </div>
 
       {/* 리스트 */}
