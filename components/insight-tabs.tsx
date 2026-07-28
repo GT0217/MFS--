@@ -145,7 +145,7 @@ function InsightViewer({
               </p>
             )
           ) : insight.summary ? (
-            <p className="text-base leading-8 text-muted-foreground">{insight.summary}</p>
+            <p className="whitespace-pre-line text-base leading-8 text-muted-foreground">{insight.summary}</p>
           ) : (
             <p className="text-sm text-muted-foreground">본문 내용이 없습니다.</p>
           )}
@@ -263,7 +263,7 @@ export function InsightTabs({ insights, initialTab }: { insights: Insight[]; ini
                       {insight.title}
                     </p>
                     {insight.summary && (
-                      <p className="mt-2 line-clamp-2 text-xs text-muted-foreground leading-relaxed">
+                      <p className="mt-2 line-clamp-2 whitespace-pre-line text-xs text-muted-foreground leading-relaxed">
                         {insight.summary}
                       </p>
                     )}

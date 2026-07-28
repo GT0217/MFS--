@@ -176,7 +176,7 @@ export default async function HomePage() {
               MFS 연구회 · 서경대학교
             </div>
             <h2 className="mt-2 text-2xl font-bold leading-tight">{settings.club_intro_title}</h2>
-            <p className="mt-3 text-pretty text-sm leading-relaxed text-muted-foreground">
+            <p className="mt-3 whitespace-pre-line text-sm leading-relaxed text-muted-foreground">
               {settings.club_intro_body}
             </p>
 
