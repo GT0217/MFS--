@@ -35,12 +35,12 @@ function InsightViewer({
     window.addEventListener("popstate", onPop)
     const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") window.history.back() }
     document.addEventListener("keydown", onKey)
-    const { overflow } = document.body.style
-    document.body.style.overflow = "hidden"
+    // body overflow를 hidden으로 바꾸지 않음:
+    // fixed inset-0 뷰어는 이미 화면을 완전히 덮으므로 불필요하고,
+    // hidden으로 바꾸면 내부 scroll container가 pull-to-refresh의 주체가 되어 오히려 문제 발생
     return () => {
       window.removeEventListener("popstate", onPop)
       document.removeEventListener("keydown", onKey)
-      document.body.style.overflow = overflow
     }
   }, [onClose])
 
@@ -78,8 +78,11 @@ function InsightViewer({
         <div className="w-[60px] shrink-0" />
       </div>
 
-      {/* Content — overscroll-contain으로 부모 pull-to-refresh 체이닝 방지, touch-pan-y로 수직 스크롤 의도 명시 */}
-      <div className="flex-1 overflow-y-auto overscroll-contain touch-pan-y">
+      {/* Content — overscroll-behavior: none으로 pull-to-refresh 완전 차단 */}
+      <div
+        className="flex-1 overflow-y-auto touch-pan-y"
+        style={{ overscrollBehavior: "none", WebkitOverflowScrolling: "touch" } as React.CSSProperties}
+      >
         <div className="mx-auto max-w-2xl px-5 py-8">
           {/* 메타 정보 */}
           <div className="mb-8 border-b border-border pb-6">
@@ -102,7 +105,6 @@ function InsightViewer({
                     crossOrigin="anonymous"
                     loading={i === 0 ? "eager" : "lazy"}
                     decoding="async"
-                    style={{ imageRendering: "auto" }}
                   />
                 </figure>
               ))}
