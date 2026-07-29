@@ -62,6 +62,7 @@ function revalidateAll() {
   revalidatePath("/")
   revalidatePath("/ranking")
   revalidatePath("/insights")
+  revalidatePath("/news")
   revalidatePath("/recommend")
   revalidatePath("/admin")
 }
@@ -274,6 +275,63 @@ export async function deleteInsightCategory(formData: FormData) {
   const id = num(formData.get("id"))
   if (!id) return
   await getPool().query("DELETE FROM insight_categories WHERE id=$1", [id])
+  revalidateAll()
+}
+
+/* ---------------- news ---------------- */
+
+export async function saveNews(_prev: SaveState, formData: FormData): Promise<SaveState> {
+  const id = num(formData.get("id"))
+  const title = str(formData.get("title"))
+  if (!title) return { ok: false, message: "제목을 입력해 주세요." }
+
+  const summary = str(formData.get("summary")) || null
+  const content = str(formData.get("content")) || null
+  const linkUrl = str(formData.get("link_url")) || null
+  const author = str(formData.get("author")) || null
+  const category = str(formData.get("category")) || "금융 뉴스"
+  const sortOrder = num(formData.get("sort_order"))
+
+  const uploaded = await maybeUpload(formData.get("image"))
+
+  if (id) {
+    if (uploaded) {
+      const prev = await getPool().query("SELECT image_url FROM news WHERE id = $1", [id])
+      await safeDelBlob(prev.rows[0]?.image_url ?? null)
+      await getPool().query(
+        `UPDATE news
+         SET title=$1, summary=$2, content=$3, link_url=$4, author=$5,
+             category=$6, sort_order=$7, image_url=$8
+         WHERE id=$9`,
+        [title, summary, content, linkUrl, author, category, sortOrder, uploaded, id],
+      )
+    } else {
+      await getPool().query(
+        `UPDATE news
+         SET title=$1, summary=$2, content=$3, link_url=$4, author=$5,
+             category=$6, sort_order=$7
+         WHERE id=$8`,
+        [title, summary, content, linkUrl, author, category, sortOrder, id],
+      )
+    }
+  } else {
+    await getPool().query(
+      `INSERT INTO news
+         (title, summary, content, link_url, author, category, sort_order, image_url)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`,
+      [title, summary, content, linkUrl, author, category, sortOrder, uploaded],
+    )
+  }
+  revalidateAll()
+  return { ok: true, message: "저장되었습니다." }
+}
+
+export async function deleteNews(formData: FormData) {
+  const id = num(formData.get("id"))
+  if (!id) return
+  const prev = await getPool().query("SELECT image_url FROM news WHERE id = $1", [id])
+  await safeDelBlob(prev.rows[0]?.image_url ?? null)
+  await getPool().query("DELETE FROM news WHERE id = $1", [id])
   revalidateAll()
 }
 

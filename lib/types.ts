@@ -56,6 +56,23 @@ export type Insight = {
   created_at: string
 }
 
+/* ---------------- 뉴스 ---------------- */
+export type News = {
+  id: number
+  title: string
+  summary: string | null
+  content: string | null
+  link_url: string | null
+  image_url: string | null
+  author: string | null
+  category: string
+  sort_order: number
+  created_at: string
+}
+
+// 뉴스 카테고리 (직접 입력도 가능하지만 기본 제공)
+export const NEWS_CATEGORIES = ["멤버 칼럼", "금융 뉴스", "은행 소식", "핀테크 트렌드"] as const
+
 export const SCORE_FIELDS = [
   "score_convenience",
   "score_variety",

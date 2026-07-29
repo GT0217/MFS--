@@ -1,6 +1,6 @@
 import "server-only"
 import { Pool } from "pg"
-import { type App, type AppWithScore, type Insight, type InsightCategoryRow, type SiteSettings, DEFAULT_SITE_SETTINGS, overallScore, INSIGHT_CATEGORIES } from "./types"
+import { type App, type AppWithScore, type Insight, type InsightCategoryRow, type News, type SiteSettings, DEFAULT_SITE_SETTINGS, overallScore, INSIGHT_CATEGORIES } from "./types"
 
 export * from "./types"
 
@@ -74,6 +74,17 @@ export async function getInsightCategories(): Promise<InsightCategoryRow[]> {
       sort_order: i,
       created_at: "",
     }))
+  }
+}
+
+export async function getNews(): Promise<News[]> {
+  try {
+    const { rows } = await getPool().query<News>(
+      "SELECT * FROM news ORDER BY sort_order ASC, created_at DESC",
+    )
+    return rows
+  } catch {
+    return []
   }
 }
 
