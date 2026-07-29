@@ -2,10 +2,7 @@
 
 /**
  * RichTextEditor — Quill + 순수 React 이미지 리사이즈 구현
- *
- * quill-image-resize-module-react는 Quill v2(parchment) 호환 문제로 제거.
- * 대신 MutationObserver로 .ql-editor 내 이미지를 감시하고,
- * React 포털 없이 wrapper div에 절대좌표 핸들을 직접 렌더링.
+ * 마우스(PC) + 터치(모바일) 핀치줌·드래그 핸들 완전 지원
  */
 
 import dynamic from "next/dynamic"
@@ -54,6 +51,14 @@ const ReactQuill = dynamic(
   { ssr: false },
 )
 
+/* ── 핀치 거리 계산 ── */
+function getTouchDist(touches: TouchList): number {
+  if (touches.length < 2) return 0
+  const dx = touches[0].clientX - touches[1].clientX
+  const dy = touches[0].clientY - touches[1].clientY
+  return Math.sqrt(dx * dx + dy * dy)
+}
+
 /* ── 리사이즈 핸들 위치 타입 ── */
 interface HandlePos {
   top: number
@@ -94,7 +99,7 @@ function getModulesAndFormats() {
   return { modules: _modules, formats: _formats }
 }
 
-/* ── 이미지 리사이즈 핸들 컴포넌트 ── */
+/* ── 이미지 리사이즈 핸들 컴포넌트 (마우스 + 터치 완전 지원) ── */
 function ResizeHandles({
   pos,
   onResize,
@@ -106,30 +111,35 @@ function ResizeHandles({
   onAlign: (style: string) => void
   onDeselect: () => void
 }) {
-  const startRef = useRef<{ x: number; w: number; corner: string } | null>(null)
+  // 마우스 드래그 상태
+  const mouseDragRef = useRef<{ x: number; w: number; corner: string } | null>(null)
+  // 터치 단일 핸들 드래그 상태
+  const touchDragRef = useRef<{ x: number; w: number; corner: string } | null>(null)
+  // 핀치줌 상태
+  const pinchRef = useRef<{ dist: number; w: number } | null>(null)
 
   const corners = [
-    { key: "nw", style: { top: -6, left: -6, cursor: "nw-resize" } },
-    { key: "ne", style: { top: -6, left: pos.width - 6, cursor: "ne-resize" } },
-    { key: "sw", style: { top: pos.height - 6, left: -6, cursor: "sw-resize" } },
-    { key: "se", style: { top: pos.height - 6, left: pos.width - 6, cursor: "se-resize" } },
+    { key: "nw", top: -10, left: -10, cursor: "nw-resize" },
+    { key: "ne", top: -10, left: pos.width - 10, cursor: "ne-resize" },
+    { key: "sw", top: pos.height - 10, left: -10, cursor: "sw-resize" },
+    { key: "se", top: pos.height - 10, left: pos.width - 10, cursor: "se-resize" },
   ]
 
+  /* ── 마우스 핸들러 ── */
   const onMouseDown = useCallback(
     (e: React.MouseEvent, corner: string) => {
       e.preventDefault()
       e.stopPropagation()
-      startRef.current = { x: e.clientX, w: pos.width, corner }
+      mouseDragRef.current = { x: e.clientX, w: pos.width, corner }
 
       const onMove = (ev: MouseEvent) => {
-        if (!startRef.current) return
-        const dx = ev.clientX - startRef.current.x
+        if (!mouseDragRef.current) return
+        const dx = ev.clientX - mouseDragRef.current.x
         const mult = corner.endsWith("e") ? 1 : -1
-        const newW = Math.max(40, startRef.current.w + dx * mult)
-        onResize(Math.round(newW))
+        onResize(Math.max(40, Math.round(mouseDragRef.current.w + dx * mult)))
       }
       const onUp = () => {
-        startRef.current = null
+        mouseDragRef.current = null
         window.removeEventListener("mousemove", onMove)
         window.removeEventListener("mouseup", onUp)
       }
@@ -139,10 +149,65 @@ function ResizeHandles({
     [pos.width, onResize],
   )
 
+  /* ── 터치 핸들러: 핸들 위 단일 손가락 드래그 ── */
+  const onHandleTouchStart = useCallback(
+    (e: React.TouchEvent, corner: string) => {
+      e.preventDefault()
+      e.stopPropagation()
+      if (e.touches.length === 1) {
+        touchDragRef.current = { x: e.touches[0].clientX, w: pos.width, corner }
+      }
+    },
+    [pos.width],
+  )
+
+  /* ── 터치 핸들러: 이미지 영역 핀치줌 ── */
+  const onImgAreaTouchStart = useCallback(
+    (e: React.TouchEvent) => {
+      if (e.touches.length === 2) {
+        e.preventDefault()
+        pinchRef.current = { dist: getTouchDist(e.touches as unknown as TouchList), w: pos.width }
+      }
+    },
+    [pos.width],
+  )
+
+  /* ── window 레벨 touchmove / touchend ── */
+  useEffect(() => {
+    const onTouchMove = (e: TouchEvent) => {
+      // 핀치줌 (두 손가락)
+      if (e.touches.length === 2 && pinchRef.current) {
+        e.preventDefault()
+        const newDist = getTouchDist(e.touches)
+        const scale = newDist / pinchRef.current.dist
+        onResize(Math.max(40, Math.round(pinchRef.current.w * scale)))
+        return
+      }
+      // 핸들 단일 드래그 (한 손가락)
+      if (e.touches.length === 1 && touchDragRef.current) {
+        e.preventDefault()
+        const dx = e.touches[0].clientX - touchDragRef.current.x
+        const mult = touchDragRef.current.corner.endsWith("e") ? 1 : -1
+        onResize(Math.max(40, Math.round(touchDragRef.current.w + dx * mult)))
+      }
+    }
+    const onTouchEnd = () => {
+      touchDragRef.current = null
+      pinchRef.current = null
+    }
+    window.addEventListener("touchmove", onTouchMove, { passive: false })
+    window.addEventListener("touchend", onTouchEnd)
+    return () => {
+      window.removeEventListener("touchmove", onTouchMove)
+      window.removeEventListener("touchend", onTouchEnd)
+    }
+  }, [onResize])
+
   return (
     <>
-      {/* 오버레이 박스 */}
+      {/* 이미지 선택 테두리 + 핀치줌 터치 영역 */}
       <div
+        onTouchStart={onImgAreaTouchStart}
         style={{
           position: "absolute",
           top: pos.top,
@@ -152,25 +217,27 @@ function ResizeHandles({
           border: "2px solid #5ba832",
           borderRadius: 4,
           boxSizing: "border-box",
-          pointerEvents: "none",
           zIndex: 10,
+          touchAction: "none",
         }}
       />
+
       {/* 정렬 미니 툴바 */}
       <div
+        onMouseDown={(e) => e.preventDefault()}
+        onTouchStart={(e) => e.stopPropagation()}
         style={{
           position: "absolute",
-          top: pos.top - 34,
+          top: pos.top - 44,
           left: pos.left,
           zIndex: 20,
           display: "flex",
           gap: 4,
           background: "#1f2937",
-          padding: "3px 6px",
-          borderRadius: 7,
-          boxShadow: "0 2px 8px rgba(0,0,0,0.25)",
+          padding: "5px 8px",
+          borderRadius: 8,
+          boxShadow: "0 2px 10px rgba(0,0,0,0.3)",
         }}
-        onMouseDown={(e) => e.preventDefault()}
       >
         {[
           { label: "◀ 왼쪽", style: "float:left;margin:0 12px 8px 0;" },
@@ -181,47 +248,56 @@ function ResizeHandles({
             key={label}
             type="button"
             onMouseDown={(e) => { e.preventDefault(); onAlign(style) }}
+            onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); onAlign(style) }}
             style={{
-              fontSize: 10,
+              fontSize: 11,
               fontWeight: 600,
               color: "#e5e7eb",
               background: "transparent",
               border: "1px solid #374151",
               borderRadius: 5,
-              padding: "2px 7px",
+              // 모바일에서 탭하기 충분한 최소 크기
+              padding: "6px 10px",
+              minHeight: 36,
               cursor: "pointer",
               whiteSpace: "nowrap",
+              touchAction: "manipulation",
             }}
           >
             {label}
           </button>
         ))}
       </div>
-      {/* 네 모서리 핸들 */}
-      {corners.map(({ key, style }) => (
+
+      {/* 네 모서리 핸들 — 모바일 터치 타겟 충분히 크게 (20x20) */}
+      {corners.map(({ key, top, left, cursor }) => (
         <div
           key={key}
           onMouseDown={(e) => onMouseDown(e, key)}
+          onTouchStart={(e) => onHandleTouchStart(e, key)}
           style={{
             position: "absolute",
-            top: pos.top + (style.top as number),
-            left: pos.left + (style.left as number),
-            width: 12,
-            height: 12,
+            top: pos.top + top,
+            left: pos.left + left,
+            width: 20,
+            height: 20,
             background: "#5ba832",
             border: "2px solid #fff",
             borderRadius: "50%",
-            cursor: style.cursor as string,
+            cursor,
             zIndex: 20,
             boxSizing: "border-box",
             boxShadow: "0 1px 4px rgba(0,0,0,0.3)",
+            touchAction: "none",
           }}
         />
       ))}
-      {/* 외부 클릭 감지용 투명 오버레이 */}
+
+      {/* 외부 클릭/터치 감지용 투명 오버레이 */}
       <div
         style={{ position: "fixed", inset: 0, zIndex: 9 }}
         onMouseDown={onDeselect}
+        onTouchEnd={(e) => { e.preventDefault(); onDeselect() }}
       />
     </>
   )
@@ -234,7 +310,7 @@ export function RichTextEditor({ value, onChange, placeholder }: RichTextEditorP
 
   const { modules, formats } = getModulesAndFormats()
 
-  /* 이미지 클릭 → 핸들 위치 계산 */
+  /* 이미지 클릭/터치 → 핸들 위치 계산 */
   const selectImage = useCallback((img: HTMLImageElement) => {
     const wrapper = wrapperRef.current
     if (!wrapper) return
@@ -249,69 +325,76 @@ export function RichTextEditor({ value, onChange, placeholder }: RichTextEditorP
     })
   }, [])
 
-  /* .ql-editor 내 이미지 클릭 이벤트 위임 */
+  /* .ql-editor 내 이미지 — mousedown + touchend 이벤트 위임 */
   useEffect(() => {
     const wrapper = wrapperRef.current
     if (!wrapper) return
-    const handler = (e: MouseEvent) => {
+
+    const onMouseDown = (e: MouseEvent) => {
       const target = e.target as HTMLElement
       if (target.tagName === "IMG" && wrapper.contains(target)) {
         e.stopPropagation()
         selectImage(target as HTMLImageElement)
       }
     }
-    wrapper.addEventListener("mousedown", handler)
-    return () => wrapper.removeEventListener("mousedown", handler)
+    // 터치: touchend로 처리해야 이미지 선택이 확실히 됨
+    const onTouchEnd = (e: TouchEvent) => {
+      const target = e.target as HTMLElement
+      if (target.tagName === "IMG" && wrapper.contains(target)) {
+        e.preventDefault()
+        selectImage(target as HTMLImageElement)
+      }
+    }
+
+    wrapper.addEventListener("mousedown", onMouseDown)
+    wrapper.addEventListener("touchend", onTouchEnd, { passive: false })
+    return () => {
+      wrapper.removeEventListener("mousedown", onMouseDown)
+      wrapper.removeEventListener("touchend", onTouchEnd)
+    }
   }, [selectImage])
 
-  /* 이미지 크기 변경 */
+  /* 이미지 크기 변경 → Quill HTML 동기화 */
+  const syncQuill = useCallback(
+    (img: HTMLImageElement) => {
+      const editor = img.closest(".ql-editor") as HTMLElement | null
+      if (editor) {
+        const container = editor.parentElement
+        const quillInstance = (container as any)?.__quill
+        if (quillInstance) {
+          quillInstance.update()
+          onChange(quillInstance.root.innerHTML)
+        }
+      }
+      selectImage(img)
+    },
+    [onChange, selectImage],
+  )
+
   const handleResize = useCallback(
     (newWidth: number) => {
       if (!handlePos) return
       const img = handlePos.imgEl
       const currentStyle = img.getAttribute("style") || ""
-      // float/margin 유지하면서 width만 교체
       const withoutWidth = currentStyle.replace(/width\s*:[^;]+;?/gi, "").trim()
       img.setAttribute("style", `${withoutWidth ? withoutWidth + ";" : ""}width:${newWidth}px;`)
-      // Quill HTML 강제 동기화
-      const editor = img.closest(".ql-editor") as HTMLElement | null
-      if (editor) {
-        // quill-new exposes __quill on the container
-        const container = editor.parentElement
-        const quillInstance = (container as any)?.__quill
-        if (quillInstance) {
-          quillInstance.update()
-          onChange(quillInstance.root.innerHTML)
-        }
-      }
-      selectImage(img)
+      syncQuill(img)
     },
-    [handlePos, onChange, selectImage],
+    [handlePos, syncQuill],
   )
 
-  /* 정렬 스타일 변경 */
   const handleAlign = useCallback(
     (alignStyle: string) => {
       if (!handlePos) return
       const img = handlePos.imgEl
       const currentStyle = img.getAttribute("style") || ""
-      // float/display/margin 제거 후 새 정렬 적용, width는 유지
       const widthMatch = currentStyle.match(/width\s*:[^;]+;?/i)
       const widthStr = widthMatch ? widthMatch[0].replace(/;$/, "") : ""
       const combined = [widthStr, alignStyle].filter(Boolean).join(";")
       img.setAttribute("style", combined)
-      const editor = img.closest(".ql-editor") as HTMLElement | null
-      if (editor) {
-        const container = editor.parentElement
-        const quillInstance = (container as any)?.__quill
-        if (quillInstance) {
-          quillInstance.update()
-          onChange(quillInstance.root.innerHTML)
-        }
-      }
-      selectImage(img)
+      syncQuill(img)
     },
-    [handlePos, onChange, selectImage],
+    [handlePos, syncQuill],
   )
 
   return (
