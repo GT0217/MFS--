@@ -2,12 +2,13 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Home, Trophy, Lightbulb, Sparkles } from "lucide-react"
+import { Home, Trophy, Lightbulb, Newspaper, Sparkles } from "lucide-react"
 
 const TABS = [
   { href: "/", label: "홈", icon: Home, exact: true },
   { href: "/ranking", label: "랭킹", icon: Trophy, exact: false },
   { href: "/insights", label: "인사이트", icon: Lightbulb, exact: false },
+  { href: "/news", label: "뉴스", icon: Newspaper, exact: false },
   { href: "/recommend", label: "AI 추천", icon: Sparkles, exact: false },
 ]
 
