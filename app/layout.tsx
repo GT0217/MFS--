@@ -25,7 +25,11 @@ export const metadata: Metadata = {
 }
 
 export const viewport: Viewport = {
-  themeColor: "#7bc144",
+  // 배경색과 동일하게 맞춰야 페이지 전환 시 초록 플래시가 없음
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#f4f6f3" },
+    { media: "(prefers-color-scheme: dark)",  color: "#000000" },
+  ],
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
@@ -39,7 +43,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="ko" className={`${geistSans.variable} bg-background`} suppressHydrationWarning>
-      <body className="font-sans">
+      <body className="font-sans bg-background">
         <script
           suppressHydrationWarning
           dangerouslySetInnerHTML={{

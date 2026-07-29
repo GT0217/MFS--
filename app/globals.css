@@ -193,6 +193,24 @@ img {
   image-rendering: -webkit-optimize-contrast;
 }
 
+/* 페이지 전환 시 깜박임 방지 — 배경이 항상 채워진 상태 유지 */
+html {
+  background-color: #f4f6f3;
+}
+html.dark {
+  background-color: #000000;
+}
+
+/* Next.js 페이지 전환 부드럽게 */
+@media (prefers-reduced-motion: no-preference) {
+  ::view-transition-old(root) {
+    animation: none;
+  }
+  ::view-transition-new(root) {
+    animation: none;
+  }
+}
+
 /* Hide scrollbar for horizontal carousels */
 .no-scrollbar::-webkit-scrollbar {
   display: none;
