@@ -599,7 +599,7 @@ function CategoryManager({ categories }: { categories: InsightCategoryRow[] }) {
       {/* 기존 카테고리 목록 */}
       <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
         <div className="px-5 py-4">
-          <p className="font-bold">카테고리 목록</p>
+          <p className="font-bold">카테고�� 목록</p>
           <p className="text-xs text-muted-foreground">인사이트 탭과 글쓰기 폼에 동일하게 반영됩니다.</p>
         </div>
         <div className="divide-y divide-border border-t border-border">
@@ -692,9 +692,9 @@ function CategoryRow({ cat }: { cat: InsightCategoryRow }) {
           <button
             type="button"
             onClick={() => setEditing(true)}
-            className="text-xs font-medium text-muted-foreground hover:text-foreground"
+            className="rounded-lg border border-border px-3 py-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground"
           >
-            수��
+            수정
           </button>
           <form
             action={deleteInsightCategory}
