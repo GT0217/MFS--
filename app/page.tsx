@@ -30,8 +30,8 @@ export default async function HomePage() {
           unoptimized={!!settings.hero_image_url}
           aria-hidden="true"
         />
-        {/* 진한 오버레이 — 텍스트 가독성 확보 */}
-        <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/55 to-black/90" aria-hidden="true" />
+        {/* 오버레이 — 텍스트 가독성 유지하면서 사진 밝기 향상 */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/45 via-black/30 to-black/65" aria-hidden="true" />
 
         {/* 배지 */}
         <div className="relative px-6 pt-12">
