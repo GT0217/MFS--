@@ -3,8 +3,8 @@
 import { useState, useEffect, useActionState } from "react"
 import Image from "next/image"
 import { CheckCircle, XCircle } from "lucide-react"
-import { CRITERIA, INSIGHT_CATEGORIES, type AppWithScore, type Insight, type InsightCategoryRow, type SiteSettings } from "@/lib/types"
-import { saveApp, deleteApp, saveInsight, deleteInsight, saveSiteSettings, saveInsightCategory, deleteInsightCategory, type SaveState } from "@/app/actions"
+import { CRITERIA, INSIGHT_CATEGORIES, NEWS_CATEGORIES, type AppWithScore, type Insight, type InsightCategoryRow, type News, type SiteSettings } from "@/lib/types"
+import { saveApp, deleteApp, saveInsight, deleteInsight, saveSiteSettings, saveInsightCategory, deleteInsightCategory, saveNews, deleteNews, type SaveState } from "@/app/actions"
 import { RichTextEditor } from "@/components/rich-text-editor"
 import "react-quill-new/dist/quill.snow.css"
 
@@ -48,15 +48,17 @@ const label = "text-xs font-semibold text-muted-foreground"
 export function AdminDashboard({
   apps,
   insights,
+  newsList,
   siteSettings,
   categories,
 }: {
   apps: AppWithScore[]
   insights: Insight[]
+  newsList: News[]
   siteSettings: SiteSettings
   categories: InsightCategoryRow[]
 }) {
-  const [tab, setTab] = useState<"apps" | "insights" | "categories" | "home">("apps")
+  const [tab, setTab] = useState<"apps" | "insights" | "news" | "categories" | "home">("apps")
 
   return (
     <div className="flex flex-col gap-6">
@@ -77,6 +79,14 @@ export function AdminDashboard({
             }`}
           >
             인사이트 ({insights.length})
+          </button>
+          <button
+            onClick={() => setTab("news")}
+            className={`rounded-lg px-3 py-1.5 text-sm font-semibold transition-colors ${
+              tab === "news" ? "bg-primary text-primary-foreground" : "text-muted-foreground"
+            }`}
+          >
+            뉴스 ({newsList.length})
           </button>
           <button
             onClick={() => setTab("categories")}
@@ -120,6 +130,17 @@ export function AdminDashboard({
           {insights.map((it) => (
             <Collapsible key={it.id} title={it.title} subtitle={it.category ?? it.type}>
               <InsightForm insight={it} categories={categories} />
+            </Collapsible>
+          ))}
+        </div>
+      ) : tab === "news" ? (
+        <div className="flex flex-col gap-4">
+          <Collapsible title="새 뉴스 추가" accent>
+            <NewsForm />
+          </Collapsible>
+          {newsList.map((item) => (
+            <Collapsible key={item.id} title={item.title} subtitle={item.category}>
+              <NewsForm news={item} />
             </Collapsible>
           ))}
         </div>
@@ -468,6 +489,80 @@ function HomeSettingsForm({ settings }: { settings: SiteSettings }) {
   )
 }
 
+function NewsForm({ news }: { news?: News }) {
+  const formId = news ? `news-${news.id}` : "news-new"
+  const [contentHtml, setContentHtml] = useState<string>(news?.content ?? "")
+  const [state, baseAction, pending] = useActionState(saveNews, null)
+
+  return (
+    <div className="flex flex-col gap-4">
+      <SaveToast state={state} />
+      <form
+        action={async (fd) => {
+          fd.set("content", contentHtml)
+          await baseAction(fd)
+        }}
+        id={formId}
+        className="flex flex-col gap-4"
+      >
+        {news ? <input type="hidden" name="id" value={news.id} /> : null}
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <Field text="카테고리">
+            <select name="category" defaultValue={news?.category ?? "금융 뉴스"} className={input}>
+              {NEWS_CATEGORIES.map((c) => (
+                <option key={c} value={c}>{c}</option>
+              ))}
+            </select>
+          </Field>
+          <Field text="정렬 순서">
+            <input name="sort_order" type="number" defaultValue={news?.sort_order ?? 0} className={input} />
+          </Field>
+        </div>
+        <Field text="제목">
+          <input name="title" defaultValue={news?.title} required className={input} />
+        </Field>
+        <Field text="요약 (목록 카드에 표시)">
+          <input name="summary" defaultValue={news?.summary ?? ""} className={input} />
+        </Field>
+        <Field text="작성자">
+          <input name="author" defaultValue={news?.author ?? ""} className={input} />
+        </Field>
+        <Field text="외부 원문 링크 (선택)">
+          <input
+            name="link_url"
+            type="url"
+            defaultValue={news?.link_url ?? ""}
+            placeholder="https://..."
+            className={input}
+          />
+        </Field>
+        <ImagePicker name="image" current={news?.image_url} text="썸네일 이미지 (선택)" />
+        <Field text="본문 (툴바의 이미지 버튼으로 사진 삽입 가능)">
+          <RichTextEditor
+            value={contentHtml}
+            onChange={setContentHtml}
+            placeholder="본문 내용을 입력하세요..."
+          />
+        </Field>
+        <input type="hidden" name="content" value={contentHtml} />
+      </form>
+      <div className="flex items-center justify-between pt-1">
+        <button
+          type="submit"
+          form={formId}
+          disabled={pending}
+          className="rounded-lg bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground transition-all hover:opacity-90 active:scale-95 disabled:opacity-60"
+        >
+          {pending ? "저장 중..." : "저장"}
+        </button>
+        {news ? (
+          <DeleteButton action={deleteNews} id={news.id} confirmText={`'${news.title}'을(를) 삭제할까요?`} />
+        ) : null}
+      </div>
+    </div>
+  )
+}
+
 function DeleteButton({
   action,
   id,
@@ -599,7 +694,7 @@ function CategoryRow({ cat }: { cat: InsightCategoryRow }) {
             onClick={() => setEditing(true)}
             className="text-xs font-medium text-muted-foreground hover:text-foreground"
           >
-            수정
+            수��
           </button>
           <form
             action={deleteInsightCategory}

@@ -25,25 +25,7 @@
   --radius: 1rem;
 }
 
-/* ── Dark mode — pure black ── */
-.dark {
-  --color-background: #000000;
-  --color-foreground: #f9fafb;
-  --color-card: #18181b;
-  --color-card-foreground: #f9fafb;
-  --color-muted: #27272a;
-  --color-muted-foreground: #a1a1aa;
-  --color-border: #3f3f46;
-  --color-primary: #84cc16;
-  --color-primary-foreground: #052e16;
-  --color-primary-dark: #5ba832;
-  --color-accent: #a3e635;
-  --color-hero-from: #0f1f06;
-  --color-hero-to: #1a3a0a;
-  --color-action: #3b82f6;
-  --color-action-foreground: #ffffff;
-  --color-ring: #84cc16;
-}
+/* 다크모드 비활성화 — 항상 라이트 테마 고정 */
 
 /* ── Text size ── */
 html.text-large {
@@ -71,13 +53,7 @@ body {
   touch-action: pan-y;
 }
 
-/* Force dark backgrounds on key containers */
-.dark body,
-.dark #__next,
-.dark [data-nextjs-scroll-focus-boundary] {
-  background-color: #000000;
-  color: #f9fafb;
-}
+
 
 /* ── 이미지 미니 정렬 툴바 ── */
 .mfs-img-toolbar {
@@ -196,9 +172,6 @@ img {
 /* 페이지 전환 시 깜박임 방지 — 배경이 항상 채워진 상태 유지 */
 html {
   background-color: #f4f6f3;
-}
-html.dark {
-  background-color: #000000;
 }
 
 /* Next.js 페이지 전환 부드럽게 */
