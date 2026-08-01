@@ -25,11 +25,8 @@ export const metadata: Metadata = {
 }
 
 export const viewport: Viewport = {
-  // 배경색과 동일하게 맞춰야 페이지 전환 시 초록 플래시가 없음
-  themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#f4f6f3" },
-    { media: "(prefers-color-scheme: dark)",  color: "#000000" },
-  ],
+  // 항상 라이트 테마 고정 — 다크모드 무시
+  themeColor: "#f4f6f3",
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
@@ -42,7 +39,7 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="ko" className={`${geistSans.variable} bg-background`} suppressHydrationWarning>
+    <html lang="ko" className={`${geistSans.variable} bg-background`}>
       <body className="font-sans bg-background">
         <script
           suppressHydrationWarning
