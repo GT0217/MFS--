@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from "react"
 import { FileText, ChevronLeft, ChevronRight, Download } from "lucide-react"
 import type { Insight, InsightCategoryRow } from "@/lib/types"
 import { formatDate, INSIGHT_CATEGORIES } from "@/lib/types"
+import { withSafeLinkTargets } from "@/lib/html-content"
 
 // 폴백용 하드코딩 탭
 const FALLBACK_TABS = INSIGHT_CATEGORIES.map((c) => ({ key: c.value, label: c.label }))
@@ -132,10 +133,11 @@ function InsightViewer({
               <div
                 className="prose prose-sm max-w-none leading-8 prose-content
                   prose-p:break-words prose-p:leading-8 prose-p:overflow-auto
+                  prose-a:text-primary prose-a:underline prose-a:break-all
                   [&_img]:max-w-full [&_img]:h-auto [&_img]:rounded-xl
                   [&_img:not([style])]:w-full [&_img:not([style])]:block [&_img:not([style])]:my-6
                   [&::after]:table [&::after]:content-[''] [&::after]:clear-both"
-                dangerouslySetInnerHTML={{ __html: insight.body }}
+                dangerouslySetInnerHTML={{ __html: withSafeLinkTargets(insight.body) }}
               />
             ) : (
               <p className="whitespace-pre-line text-base leading-8 text-foreground">

@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { ChevronLeft, ExternalLink, Newspaper, FileText } from "lucide-react"
 import type { News } from "@/lib/types"
 import { NEWS_CATEGORIES } from "@/lib/types"
+import { withSafeLinkTargets } from "@/lib/html-content"
 
 /* 날짜 포맷 */
 function formatDate(iso: string) {
@@ -102,9 +103,10 @@ function NewsViewer({
               <div
                 className="prose prose-sm max-w-none leading-8 prose-content
                   prose-p:break-words prose-p:leading-8 prose-p:overflow-auto
+                  prose-a:text-primary prose-a:underline prose-a:break-all
                   [&_img]:max-w-full [&_img]:h-auto [&_img]:rounded-xl
                   [&_img:not([style])]:w-full [&_img:not([style])]:block [&_img:not([style])]:my-6"
-                dangerouslySetInnerHTML={{ __html: news.content }}
+                dangerouslySetInnerHTML={{ __html: withSafeLinkTargets(news.content) }}
               />
             ) : (
               <p className="whitespace-pre-line text-base leading-8 text-foreground">
