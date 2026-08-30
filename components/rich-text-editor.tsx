@@ -49,7 +49,7 @@ const ReactQuill = dynamic(
     return RQ
   },
   { ssr: false },
-)
+) as any // next/dynamic 래핑 시 ref 타입이 누락되므로 캐스팅
 
 /* ── 핀치 거리 계산 ── */
 function getTouchDist(touches: TouchList): number {
@@ -303,12 +303,44 @@ function ResizeHandles({
   )
 }
 
+/* URL 패턴 — http(s):// 로 시작하는 문자열 감지 */
+const URL_PATTERN = /(https?:\/\/[^\s<>"'()]+)/g
+
 /* ── 메인 에디터 컴포넌트 ── */
 export function RichTextEditor({ value, onChange, placeholder }: RichTextEditorProps) {
   const wrapperRef = useRef<HTMLDivElement>(null)
+  const quillRef = useRef<any>(null)
   const [handlePos, setHandlePos] = useState<HandlePos | null>(null)
 
   const { modules, formats } = getModulesAndFormats()
+
+  /* 텍스트로 입력/붙여넣기 한 URL을 자동으로 하이퍼링크로 변환 */
+  useEffect(() => {
+    const quill = quillRef.current?.getEditor?.()
+    if (!quill) return
+
+    const autoLinkify = () => {
+      const text = quill.getText()
+      let match: RegExpExecArray | null
+      URL_PATTERN.lastIndex = 0
+      while ((match = URL_PATTERN.exec(text))) {
+        const url = match[0].replace(/[.,;:!?]+$/, "") // 문장 끝 구두점 제외
+        const start = match.index
+        const existingFormat = quill.getFormat(start, url.length)
+        if (existingFormat.link) continue // 이미 링크면 건너뜀
+        quill.formatText(start, url.length, "link", url, "silent")
+      }
+    }
+
+    // 타이핑(공백/줄바꿈 입력) 및 붙여넣기 후 모두 검사
+    const onTextChange = (_delta: any, _old: any, source: string) => {
+      if (source === "user") autoLinkify()
+    }
+    quill.on("text-change", onTextChange)
+    // 최초 로드된 기존 본문에도 적용
+    autoLinkify()
+    return () => quill.off("text-change", onTextChange)
+  }, [])
 
   /* 이미지 클릭/터치 → 핸들 위치 계산 */
   const selectImage = useCallback((img: HTMLImageElement) => {
@@ -404,6 +436,7 @@ export function RichTextEditor({ value, onChange, placeholder }: RichTextEditorP
       style={{ position: "relative" }}
     >
       <ReactQuill
+        ref={quillRef}
         theme="snow"
         value={value}
         onChange={onChange}
