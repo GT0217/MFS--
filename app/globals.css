@@ -192,3 +192,27 @@ html {
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
+/* ── 로딩 화면: 로고 부드러운 펄스 ── */
+@keyframes pulse-soft {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.72;
+    transform: scale(0.93);
+  }
+}
+.animate-pulse-soft {
+  animation: pulse-soft 1.7s ease-in-out infinite;
+}
+
+/* 로딩 화면 페이드인 — 즉시 나타나면 오히려 깜빡임처럼 보이므로 살짝 지연 후 등장 */
+@keyframes loading-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.animate-loading-fade-in {
+  animation: loading-fade-in 0.25s ease-out 0.15s both;
+}

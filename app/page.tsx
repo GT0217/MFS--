@@ -5,8 +5,8 @@ import { getApps, getInsights, getSiteSettings } from "@/lib/db"
 import { formatDate } from "@/lib/types"
 import { AppLogo } from "@/components/app-logo"
 
-export const dynamic = "force-dynamic"
-
+// 데이터 변경 시 app/actions.ts의 revalidatePath("/")가 캐시를 갱신하므로
+// force-dynamic 없이 캐시된 페이지를 사용해 이동 속도를 높인다.
 const MEDALS = ["#facc15", "#e2e8f0", "#d4a373"]
 
 export default async function HomePage() {

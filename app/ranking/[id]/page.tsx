@@ -5,8 +5,6 @@ import { getApp, CRITERIA } from "@/lib/db"
 import { AppLogo } from "@/components/app-logo"
 import { ScoreRadar } from "@/components/score-radar"
 
-export const dynamic = "force-dynamic"
-
 export default async function AppDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   const app = await getApp(Number(id))

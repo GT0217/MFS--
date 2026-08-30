@@ -3,8 +3,6 @@ import { getNews } from "@/lib/db"
 import { NewsList } from "@/components/news-list"
 import { PageHeader } from "@/components/page-header"
 
-export const dynamic = "force-dynamic"
-
 export default async function NewsPage() {
   const newsList = await getNews()
 
