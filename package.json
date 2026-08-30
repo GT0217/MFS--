@@ -22,8 +22,7 @@
     "react-dom": "^19.1.0",
     "react-quill-new": "^3.8.3",
     "recharts": "^3.8.1",
-    "server-only": "^0.0.1",
-    "swr": "^2.5.1"
+    "server-only": "^0.0.1"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.1.8",

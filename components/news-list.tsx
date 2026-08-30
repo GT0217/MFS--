@@ -5,7 +5,6 @@ import { ChevronLeft, ExternalLink, Newspaper, FileText } from "lucide-react"
 import type { News } from "@/lib/types"
 import { NEWS_CATEGORIES } from "@/lib/types"
 import { withSafeLinkTargets } from "@/lib/html-content"
-import { ExternalNewsFeed } from "@/components/external-news-feed"
 
 /* 날짜 포맷 */
 function formatDate(iso: string) {
@@ -164,8 +163,8 @@ function NewsViewer({
   )
 }
 
-/* ── MFS 소식 목록 + 카테고리 탭 ── */
-function MfsNewsList({ newsList }: { newsList: News[] }) {
+/* ── 뉴스 목록 + 카테고리 탭 ── */
+export function NewsList({ newsList }: { newsList: News[] }) {
   const allCategories = ["전체", ...Array.from(new Set(newsList.map((n) => n.category).filter(Boolean)))]
   const [activeTab, setActiveTab] = useState<string>("전체")
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null)
@@ -290,38 +289,5 @@ function MfsNewsList({ newsList }: { newsList: News[] }) {
         />
       )}
     </>
-  )
-}
-
-/* ── 뉴스 탭 최상위: "모아보기"(외부 언론사) / "MFS 소식"(관리자 작성) ── */
-export function NewsList({ newsList }: { newsList: News[] }) {
-  const [section, setSection] = useState<"aggregate" | "mfs">("aggregate")
-
-  return (
-    <div>
-      {/* 상위 하위 탭 */}
-      <div className="mb-5 flex gap-2 rounded-2xl bg-muted p-1.5">
-        <button
-          type="button"
-          onClick={() => setSection("aggregate")}
-          className={`flex-1 rounded-xl py-2.5 text-sm font-bold transition-colors ${
-            section === "aggregate" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"
-          }`}
-        >
-          모아보기
-        </button>
-        <button
-          type="button"
-          onClick={() => setSection("mfs")}
-          className={`flex-1 rounded-xl py-2.5 text-sm font-bold transition-colors ${
-            section === "mfs" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"
-          }`}
-        >
-          MFS 소식
-        </button>
-      </div>
-
-      {section === "aggregate" ? <ExternalNewsFeed /> : <MfsNewsList newsList={newsList} />}
-    </div>
   )
 }
