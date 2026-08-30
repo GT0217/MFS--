@@ -3,8 +3,6 @@ import { getApps } from "@/lib/db"
 import { RecommendQuiz } from "@/components/recommend-quiz"
 import { PageHeader } from "@/components/page-header"
 
-export const dynamic = "force-dynamic"
-
 export default async function RecommendPage() {
   const apps = await getApps()
 

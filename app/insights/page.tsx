@@ -3,8 +3,6 @@ import { getInsights, getInsightCategories } from "@/lib/db"
 import { InsightTabs } from "@/components/insight-tabs"
 import { PageHeader } from "@/components/page-header"
 
-export const dynamic = "force-dynamic"
-
 export default async function InsightsPage({
   searchParams,
 }: {

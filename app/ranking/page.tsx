@@ -3,8 +3,6 @@ import { getApps, getSiteSettings } from "@/lib/db"
 import { RankingBoard } from "@/components/ranking-board"
 import { PageHeader } from "@/components/page-header"
 
-export const dynamic = "force-dynamic"
-
 export default async function RankingPage() {
   const [apps, settings] = await Promise.all([getApps(), getSiteSettings()])
 
