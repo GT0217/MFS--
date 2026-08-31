@@ -14,7 +14,12 @@ function scoreFor(app: AppWithScore, c: Criterion): number {
 export function RankingBoard({ apps }: { apps: AppWithScore[] }) {
   const [active, setActive] = useState<Criterion>(CRITERIA[0])
 
-  const sorted = [...apps].sort((a, b) => scoreFor(b, active) - scoreFor(a, active))
+  const sorted = [...apps].sort((a, b) => {
+    const diff = scoreFor(b, active) - scoreFor(a, active)
+    if (diff !== 0) return diff
+    // 동점일 때는 관리자가 지정한 순서(sort_order)를 기준으로 안정적으로 정렬
+    return (a.sort_order ?? 0) - (b.sort_order ?? 0)
+  })
 
   return (
     <div>
