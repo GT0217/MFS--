@@ -33,13 +33,23 @@ function normalize(row: App): AppWithScore {
 }
 
 export async function getApps(): Promise<AppWithScore[]> {
-  const { rows } = await getPool().query<App>("SELECT * FROM apps ORDER BY sort_order ASC, id ASC")
-  return rows.map(normalize)
+  try {
+    const { rows } = await getPool().query<App>("SELECT * FROM apps ORDER BY sort_order ASC, id ASC")
+    return rows.map(normalize)
+  } catch (error) {
+    console.error("Failed to fetch apps:", error)
+    return [] // 조회 실패 시 빈 배열을 반환해 앱 전체가 죽는 것을 방지
+  }
 }
 
 export async function getApp(id: number): Promise<AppWithScore | null> {
-  const { rows } = await getPool().query<App>("SELECT * FROM apps WHERE id = $1", [id])
-  return rows[0] ? normalize(rows[0]) : null
+  try {
+    const { rows } = await getPool().query<App>("SELECT * FROM apps WHERE id = $1", [id])
+    return rows[0] ? normalize(rows[0]) : null
+  } catch (error) {
+    console.error("Failed to fetch app:", error)
+    return null
+  }
 }
 
 export async function getInsights(): Promise<Insight[]> {
