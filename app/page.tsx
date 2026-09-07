@@ -35,7 +35,7 @@ export default async function HomePage() {
 
         {/* 배지 */}
         <div className="relative px-6 pt-12">
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1 text-[11px] font-semibold text-white backdrop-blur-sm">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1 text-2xs font-semibold text-white backdrop-blur-sm">
             <span className="h-1.5 w-1.5 rounded-full bg-[#84cc16]" aria-hidden="true" />
             서경대학교 MFS 연구회
           </span>
@@ -43,7 +43,7 @@ export default async function HomePage() {
 
         {/* 메인 카피 */}
         <div className="relative px-6 pb-10 pt-5">
-          <h1 className="text-balance text-[32px] font-bold leading-[1.2] tracking-tight text-white">
+          <h1 className="text-balance text-hero-title font-bold leading-[1.2] tracking-tight text-white">
             {settings.hero_title.split("\n").map((line, i, arr) => (
               <span key={i}>
                 {line}
@@ -51,7 +51,7 @@ export default async function HomePage() {
               </span>
             ))}
           </h1>
-          <p className="mt-3 max-w-[18rem] text-[15px] leading-relaxed text-white/80 whitespace-pre-line">
+          <p className="mt-3 max-w-[18rem] text-hero-sub leading-relaxed text-white/80 whitespace-pre-line">
             {settings.hero_subtitle}
           </p>
 
@@ -105,7 +105,7 @@ export default async function HomePage() {
                 <p className="text-lg font-bold">{app.name}</p>
                 <p className="mt-0.5 line-clamp-1 text-xs text-white/75">{app.tagline}</p>
                 <div className="mt-3 flex items-baseline gap-1">
-                  <p className="text-[26px] font-bold leading-none">{app.overall.toFixed(1)}</p>
+                  <p className="text-score font-bold leading-none">{app.overall.toFixed(1)}</p>
                   <p className="text-xs text-white/70">/ 10</p>
                 </div>
               </div>
@@ -149,7 +149,7 @@ export default async function HomePage() {
                 className="block rounded-3xl bg-card p-5 shadow-sm transition-transform active:scale-[0.99] dark:bg-zinc-800"
               >
                 {col.category && (
-                  <span className="inline-block rounded-full bg-primary/10 px-2.5 py-0.5 text-[11px] font-semibold text-primary">
+                  <span className="inline-block rounded-full bg-primary/10 px-2.5 py-0.5 text-2xs font-semibold text-primary">
                     {col.category}
                   </span>
                 )}
@@ -171,7 +171,7 @@ export default async function HomePage() {
       <section className="px-5 pt-6">
         <div className="overflow-hidden rounded-3xl bg-card shadow-md dark:bg-zinc-800">
           <div className="p-6">
-            <div className="flex items-center gap-2 text-[11px] font-semibold text-primary">
+            <div className="flex items-center gap-2 text-2xs font-semibold text-primary">
               <Users className="h-3.5 w-3.5" aria-hidden="true" />
               MFS 연구회 · 서경대학교
             </div>
@@ -188,7 +188,7 @@ export default async function HomePage() {
               ].map((stat) => (
                 <div key={stat.label} className="rounded-2xl bg-muted py-3 dark:bg-zinc-700">
                   <p className="text-xl font-bold text-primary">{stat.value}</p>
-                  <p className="mt-0.5 text-[11px] text-muted-foreground">{stat.label}</p>
+                  <p className="mt-0.5 text-2xs text-muted-foreground">{stat.label}</p>
                 </div>
               ))}
             </div>

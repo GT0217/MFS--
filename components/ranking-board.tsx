@@ -68,7 +68,7 @@ export function RankingBoard({ apps }: { apps: AppWithScore[] }) {
                   <p className="truncate text-xs text-muted-foreground">{app.category}</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-[11px] text-muted-foreground">{active.label}</p>
+                  <p className="text-2xs text-muted-foreground">{active.label}</p>
                   <p className="text-xl font-bold text-primary">{score.toFixed(1)}</p>
                 </div>
                 <ChevronRight className="h-4 w-4 text-muted-foreground" aria-hidden="true" />

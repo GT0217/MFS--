@@ -1,9 +1,19 @@
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
+@custom-variant dark (&:where(.dark, .dark *));
 
+/* --font-sans만 런타임 변수(next/font)를 참조하므로 inline 필요 */
 @theme inline {
   --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+}
 
+/*
+ * 색상 토큰은 반드시 일반 @theme(비-inline)로 선언해야 함.
+ * @theme inline으로 선언하면 Tailwind가 빌드 시점에 리터럴 값을 유틸리티 클래스에
+ * 그대로 박아버려서 .dark { --color-x: ... } 로 런타임에 덮어써도 bg-background,
+ * text-foreground 같은 Tailwind 유틸리티가 반응하지 않는 색상 반전 문제가 생김.
+ */
+@theme {
   /* Light mode */
   --color-background: #f4f6f3;
   --color-foreground: #111827;
@@ -23,13 +33,61 @@
   --color-ring: #5ba832;
 
   --radius: 1rem;
+
+  /*
+   * text-[Npx] 형태의 임의값 대신 이름 있는 폰트 크기 토큰으로 등록해야
+   * html.text-large 오버라이드(아래)에 반응함. 임의값(arbitrary value)은
+   * 빌드 시 리터럴 px로 박히기 때문에 텍스트 크기 조절 기능이 통하지 않음.
+   */
+  --text-2xs: 0.6875rem;      /* 11px 자리를 대체 (뱃지/캡션) */
+  --text-hero-title: 2rem;    /* 32px, 홈 히어로 타이틀 전용 */
+  --text-hero-sub: 0.9375rem; /* 15px, 홈 히어로 서브카피 전용 */
+  --text-score: 1.625rem;     /* 26px, Top3 카드 점수 전용 */
 }
 
-/* 다크모드 비활성화 — 항상 라이트 테마 고정 */
+/* ── Dark mode — pure black ── */
+.dark {
+  --color-background: #000000;
+  --color-foreground: #f9fafb;
+  --color-card: #18181b;
+  --color-card-foreground: #f9fafb;
+  --color-muted: #27272a;
+  --color-muted-foreground: #a1a1aa;
+  --color-border: #3f3f46;
+  --color-primary: #84cc16;
+  --color-primary-foreground: #052e16;
+  --color-primary-dark: #5ba832;
+  --color-accent: #a3e635;
+  --color-hero-from: #0f1f06;
+  --color-hero-to: #1a3a0a;
+  --color-action: #3b82f6;
+  --color-action-foreground: #ffffff;
+  --color-ring: #84cc16;
+}
 
-/* ── Text size ── */
+/*
+ * ── Text size ──
+ * body의 font-size가 아니라 Tailwind의 폰트 크기 스케일(--text-*) 자체를 키운다.
+ * text-sm/text-xl 같은 유틸리티는 rem 단위라 body가 아닌 :root(html) 기준이라서,
+ * body에만 font-size를 주는 예전 방식으로는 명시적으로 크기를 지정한 텍스트에는
+ * 전혀 반영되지 않고 상속만 받는 일부 텍스트만 커지는 문제가 있었음.
+ * --spacing 등 여백/레이아웃 토큰은 건드리지 않으므로 박스 크기는 그대로 유지된다.
+ * text-[11px] 같은 임의값은 여기서 반응하지 않으므로 위 @theme에서 이름 있는
+ * 토큰(--text-2xs 등)으로 등록해 두어야 함 — 새 텍스트 크기를 추가할 땐 항상
+ * text-{size} 유틸리티(표준 스케일 또는 이름 있는 커스텀 토큰)를 쓸 것.
+ */
 html.text-large {
-  font-size: 18px;
+  --text-scale: 1.15;
+  --text-2xs: calc(0.6875rem * var(--text-scale));
+  --text-xs: calc(0.75rem * var(--text-scale));
+  --text-sm: calc(0.875rem * var(--text-scale));
+  --text-base: calc(1rem * var(--text-scale));
+  --text-lg: calc(1.125rem * var(--text-scale));
+  --text-xl: calc(1.25rem * var(--text-scale));
+  --text-2xl: calc(1.5rem * var(--text-scale));
+  --text-hero-title: calc(2rem * var(--text-scale));
+  --text-hero-sub: calc(0.9375rem * var(--text-scale));
+  --text-score: calc(1.625rem * var(--text-scale));
 }
 
 * {
@@ -43,10 +101,14 @@ button, a {
   transition-timing-function: ease-in-out;
 }
 
+/*
+ * html/body는 웹앱 틀(max-w-md 프레임) 바깥의 여백이라 다크모드를 따라가지 않도록
+ * 항상 고정된 라이트 색상을 씀. 다크모드는 프레임 안(bg-background 등)에만 적용됨.
+ */
 html,
 body {
-  background-color: var(--color-background);
-  color: var(--color-foreground);
+  background-color: #f4f6f3;
+  color: #111827;
   -webkit-font-smoothing: antialiased;
   /* pull-to-refresh 완전 비활성화 (Android Chrome / iOS Safari 양쪽) */
   overscroll-behavior-y: none;
@@ -167,11 +229,6 @@ body {
 /* Image rendering quality improvement */
 img {
   image-rendering: -webkit-optimize-contrast;
-}
-
-/* 페이지 전환 시 깜박임 방지 — 배경이 항상 채워진 상태 유지 */
-html {
-  background-color: #f4f6f3;
 }
 
 /* Next.js 페이지 전환 부드럽게 */
