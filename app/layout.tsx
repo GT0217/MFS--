@@ -16,8 +16,11 @@ export const metadata: Metadata = {
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
-    statusBarStyle: "black-translucent",
+    statusBarStyle: "default",
     title: "MFS Club",
+  },
+  formatDetection: {
+    telephone: false,
   },
   icons: {
     apple: "/apple-icon.png",
