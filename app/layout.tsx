@@ -16,8 +16,11 @@ export const metadata: Metadata = {
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
-    statusBarStyle: "black-translucent",
+    statusBarStyle: "default",
     title: "MFS Club",
+  },
+  formatDetection: {
+    telephone: false,
   },
   icons: {
     apple: "/apple-icon.png",
@@ -25,7 +28,7 @@ export const metadata: Metadata = {
 }
 
 export const viewport: Viewport = {
-  // 항상 라이트 테마 고정 — 다크모드 무시
+  // 웹앱 틀(프레임) 바깥의 브라우저 크롬 색상 — 다크모드와 무관하게 항상 고정
   themeColor: "#f4f6f3",
   width: "device-width",
   initialScale: 1,
@@ -39,12 +42,12 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="ko" className={`${geistSans.variable} bg-background`}>
-      <body className="font-sans bg-background">
+    <html lang="ko" className={geistSans.variable} suppressHydrationWarning>
+      <body className="font-sans">
         <script
           suppressHydrationWarning
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{if(localStorage.getItem('mfs-text-size')==='large')document.documentElement.classList.add('text-large');}catch(e){}})();`,
+            __html: `(function(){try{var t=localStorage.getItem('mfs-theme');var d=t?t==='dark':window.matchMedia('(prefers-color-scheme: dark)').matches;if(d)document.documentElement.classList.add('dark');if(localStorage.getItem('mfs-text-size')==='large')document.documentElement.classList.add('text-large');}catch(e){}})();`,
           }}
         />
         <ServiceWorkerRegister />
@@ -52,7 +55,7 @@ export default function RootLayout({
           스크롤은 <body> 네이티브에서 발생해야 pull-to-refresh가 정상 동작.
           flex-col + min-h-dvh만 유지하고, overflow 제한 클래스는 사용하지 않음.
         */}
-        <div className="relative mx-auto w-full max-w-md min-h-dvh bg-background">
+        <div className="relative mx-auto w-full max-w-md min-h-dvh bg-background text-foreground">
           <SettingsMenu />
           <main className="pb-24">{children}</main>
           <BottomNav />

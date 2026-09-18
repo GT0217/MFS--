@@ -1,17 +1,22 @@
 {
   "id": "/",
-  "name": "MFS Club",
+  "name": "MFS",
   "short_name": "MFS",
   "description": "대학생 금융 동아리 MFS Club의 모바일 금융앱 랭킹 & 인사이트",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "launch_handler": {
+    "client_mode": "navigate-existing"
+  },
   "background_color": "#f4f6f3",
   "theme_color": "#f4f6f3",
   "orientation": "portrait",
   "lang": "ko",
   "dir": "ltr",
   "prefer_related_applications": false,
+  "related_applications": [{ "platform": "play", "id": "kr.mfsclub.app" }],
   "categories": ["finance", "education"],
   "icons": [
     {
@@ -31,15 +36,6 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
-    }
-  ],
-  "screenshots": [
-    {
-      "src": "/icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "form_factor": "narrow",
-      "label": "MFS Club 홈"
     }
   ]
 }

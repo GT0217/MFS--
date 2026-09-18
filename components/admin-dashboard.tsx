@@ -446,7 +446,7 @@ function HomeSettingsForm({ settings }: { settings: SiteSettings }) {
                     }}
                     className="text-sm file:mr-3 file:rounded-lg file:border-0 file:bg-muted file:px-3 file:py-2 file:text-sm file:font-medium"
                   />
-                  <p className="text-[11px] text-muted-foreground">
+                  <p className="text-2xs text-muted-foreground">
                     파일을 선택하지 않으면 기존 사진이 유지됩니다.
                   </p>
                 </div>

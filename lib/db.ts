@@ -53,13 +53,18 @@ export async function getApp(id: number): Promise<AppWithScore | null> {
 }
 
 export async function getInsights(): Promise<Insight[]> {
-  const { rows } = await getPool().query<Insight>(
-    "SELECT * FROM insights ORDER BY sort_order ASC, created_at DESC",
-  )
-  return rows.map((r) => ({
-    ...r,
-    image_urls: Array.isArray(r.image_urls) ? r.image_urls : [],
-  }))
+  try {
+    const { rows } = await getPool().query<Insight>(
+      "SELECT * FROM insights ORDER BY sort_order ASC, created_at DESC",
+    )
+    return rows.map((r) => ({
+      ...r,
+      image_urls: Array.isArray(r.image_urls) ? r.image_urls : [],
+    }))
+  } catch (error) {
+    console.error("Failed to fetch insights:", error)
+    return []
+  }
 }
 
 export async function getInsightCategories(): Promise<InsightCategoryRow[]> {
