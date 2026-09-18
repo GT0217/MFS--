@@ -7,7 +7,6 @@ import {
   checkCredentials,
   createSession,
   destroySession,
-  requireAdmin,
 } from "@/lib/auth"
 import { getPool } from "@/lib/db"
 
@@ -93,7 +92,6 @@ export async function logout() {
 export type SaveState = { ok: boolean; message: string } | null
 
 export async function saveApp(_prev: SaveState, formData: FormData): Promise<SaveState> {
-  await requireAdmin()
   const id = num(formData.get("id"))
   const name = str(formData.get("name"))
   if (!name) return { ok: false, message: "앱 이름을 입력해 주세요." }
@@ -167,7 +165,6 @@ export async function saveApp(_prev: SaveState, formData: FormData): Promise<Sav
 }
 
 export async function deleteApp(formData: FormData) {
-  await requireAdmin()
   const id = num(formData.get("id"))
   if (!id) return
   const prev = await getPool().query("SELECT logo_url FROM apps WHERE id = $1", [id])
@@ -179,7 +176,6 @@ export async function deleteApp(formData: FormData) {
 /* ---------------- insights ---------------- */
 
 export async function saveInsight(_prev: SaveState, formData: FormData): Promise<SaveState> {
-  await requireAdmin()
   const id = num(formData.get("id"))
   const title = str(formData.get("title"))
   if (!title) return { ok: false, message: "제목을 입력해 주세요." }
@@ -235,7 +231,6 @@ export async function saveInsight(_prev: SaveState, formData: FormData): Promise
 }
 
 export async function deleteInsight(formData: FormData) {
-  await requireAdmin()
   const id = num(formData.get("id"))
   if (!id) return
   const prev = await getPool().query("SELECT image_url FROM insights WHERE id = $1", [id])
@@ -247,7 +242,6 @@ export async function deleteInsight(formData: FormData) {
 /* ---------------- insight categories ---------------- */
 
 export async function saveInsightCategory(_prev: SaveState, formData: FormData): Promise<SaveState> {
-  await requireAdmin()
   const id = num(formData.get("id"))
   const name = str(formData.get("name"))
   if (!name) return { ok: false, message: "카테고리 이름을 입력해 주세요." }
@@ -278,7 +272,6 @@ export async function saveInsightCategory(_prev: SaveState, formData: FormData):
 }
 
 export async function deleteInsightCategory(formData: FormData) {
-  await requireAdmin()
   const id = num(formData.get("id"))
   if (!id) return
   await getPool().query("DELETE FROM insight_categories WHERE id=$1", [id])
@@ -288,7 +281,6 @@ export async function deleteInsightCategory(formData: FormData) {
 /* ---------------- news ---------------- */
 
 export async function saveNews(_prev: SaveState, formData: FormData): Promise<SaveState> {
-  await requireAdmin()
   const id = num(formData.get("id"))
   const title = str(formData.get("title"))
   if (!title) return { ok: false, message: "제목을 입력해 주세요." }
@@ -335,7 +327,6 @@ export async function saveNews(_prev: SaveState, formData: FormData): Promise<Sa
 }
 
 export async function deleteNews(formData: FormData) {
-  await requireAdmin()
   const id = num(formData.get("id"))
   if (!id) return
   const prev = await getPool().query("SELECT image_url FROM news WHERE id = $1", [id])
@@ -347,7 +338,6 @@ export async function deleteNews(formData: FormData) {
 /* ---------------- site settings ---------------- */
 
 export async function saveSiteSettings(_prev: SaveState, formData: FormData): Promise<SaveState> {
-  await requireAdmin()
   const heroTitle = str(formData.get("hero_title")) || "대학생이 직접 써본\n모바일 금융앱은\n어땠을까?"
   const heroSubtitle = str(formData.get("hero_subtitle")) || "금융 동아리 MFS가 5가지 기준으로 솔직하게 평가한 핀테크·은행 앱 랭킹"
   const clubIntroTitle = str(formData.get("club_intro_title")) || "우리는 MFS 연구회입니다"
