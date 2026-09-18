@@ -22,7 +22,7 @@ export function PageHeader({
           <Icon className="h-5 w-5" aria-hidden="true" />
         </span>
         <div>
-          <p className="text-2xs font-semibold uppercase tracking-wide text-primary">{eyebrow}</p>
+          <p className="text-[11px] font-semibold uppercase tracking-wide text-primary">{eyebrow}</p>
           <h1 className="text-xl font-bold leading-tight">{title}</h1>
         </div>
       </div>

@@ -6,10 +6,6 @@
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
-  "display_override": ["standalone", "minimal-ui"],
-  "launch_handler": {
-    "client_mode": "navigate-existing"
-  },
   "background_color": "#f4f6f3",
   "theme_color": "#f4f6f3",
   "orientation": "portrait",
