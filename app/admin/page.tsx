@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { isAuthenticated } from "@/lib/auth"
+import { isAuthenticated, isAdminConfigured } from "@/lib/auth"
 import { getApps, getInsights, getSiteSettings, getInsightCategories, getNews } from "@/lib/db"
 import { LoginForm } from "@/components/login-form"
 import { AdminDashboard } from "@/components/admin-dashboard"

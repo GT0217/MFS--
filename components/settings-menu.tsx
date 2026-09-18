@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react"
 import Link from "next/link"
-import { Settings, Moon, Sun, Type, ShieldCheck, Check, FileText } from "lucide-react"
+import { Settings, Moon, Sun, Type, ShieldCheck, Check } from "lucide-react"
 
 type TextSize = "default" | "large"
 
@@ -122,20 +122,6 @@ export function SettingsMenu() {
               <TextSizeButton active={textSize === "default"} onClick={() => changeTextSize("default")} label="기본" sizeClass="text-sm" />
               <TextSizeButton active={textSize === "large"} onClick={() => changeTextSize("large")} label="크게" sizeClass="text-base" />
             </div>
-          </div>
-
-          {/* Privacy and service guide */}
-          <div style={{ borderTop: "1px solid var(--color-border)" }} className="px-4 py-3">
-            <Link
-              href="/privacy"
-              role="menuitem"
-              onClick={() => setOpen(false)}
-              className="flex items-center justify-center gap-1.5 py-0.5 text-2xs font-medium transition-colors"
-              style={{ color: "var(--color-muted-foreground)" }}
-            >
-              <FileText className="h-3.5 w-3.5" aria-hidden="true" />
-              개인정보처리방침 · 서비스 안내
-            </Link>
           </div>
 
           {/* Admin entry */}
