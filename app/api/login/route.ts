@@ -1,8 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { ADMIN_ID, ADMIN_PASSWORD } from "@/lib/auth"
-
-const COOKIE_NAME = "mfs_admin"
-const VALID_TOKEN = "mfs-admin-token-2025-fixed"
+import { checkCredentials, createSession, isAdminConfigured } from "@/lib/auth"
 
 export async function POST(req: NextRequest) {
   let id = ""
@@ -16,18 +13,14 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "잘못된 요청입니다." }, { status: 400 })
   }
 
-  if (id !== ADMIN_ID || password !== ADMIN_PASSWORD) {
-    return NextResponse.json(
-      { error: "아이디 또는 비밀번호가 올바르지 않습니다." },
-      { status: 401 },
-    )
+  if (!isAdminConfigured()) {
+    return NextResponse.json({ error: "관리자 인증 환경변수가 설정되지 않았습니다." }, { status: 503 })
+  }
+  if (!checkCredentials(id, password)) {
+    return NextResponse.json({ error: "아이디 또는 비밀번호가 올바르지 않습니다." }, { status: 401 })
   }
 
-  // next/headers 대신 Response에 직접 Set-Cookie 헤더를 추가합니다
-  const maxAge = 60 * 60 * 24 * 30
-  const cookieValue = `${COOKIE_NAME}=${VALID_TOKEN}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${maxAge}`
-
-  const response = NextResponse.json({ ok: true })
-  response.headers.set("Set-Cookie", cookieValue)
-  return response
+  // Server Action과 동일한 HMAC 서명 세션 쿠키를 사용합니다.
+  await createSession()
+  return NextResponse.json({ ok: true })
 }

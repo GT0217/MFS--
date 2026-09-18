@@ -1,47 +1,58 @@
+import { createHmac, timingSafeEqual } from "node:crypto"
 import { cookies } from "next/headers"
 
 const COOKIE_NAME = "mfs_admin"
-// 고정 토큰 — 환경변수 없이 항상 동일하게 동작
-const VALID_TOKEN = "mfs-admin-token-2025-fixed"
+const SESSION_TTL = 60 * 60 * 24 * 2
+const sessionSecret = () => process.env.ADMIN_SESSION_SECRET
 
-export const ADMIN_ID = "MFS"
-export const ADMIN_PASSWORD = "tjrltnrytnsla!"
+export const ADMIN_ID = process.env.ADMIN_ID ?? ""
+export const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD ?? ""
+
+export function isAdminConfigured(): boolean {
+  return Boolean(ADMIN_ID && ADMIN_PASSWORD && sessionSecret())
+}
 
 export function checkCredentials(id: string, password: string): boolean {
-  return id.trim() === ADMIN_ID && password.trim() === ADMIN_PASSWORD
+  return isAdminConfigured() && id.trim() === ADMIN_ID && password.trim() === ADMIN_PASSWORD
 }
+
+function sign(payload: string): string {
+  return createHmac("sha256", sessionSecret()!).update(payload).digest("base64url")
+}
+
+function createToken(): string {
+  const expires = Math.floor(Date.now() / 1000) + SESSION_TTL
+  const payload = `mfs:${expires}`
+  return `${payload}.${sign(payload)}`
+}
+
+function validToken(token: string | undefined): boolean {
+  if (!token || !sessionSecret()) return false
+  const [payload, signature] = token.split(".")
+  const expected = sign(payload ?? "")
+  if (!signature || signature.length !== expected.length) return false
+  try {
+    const valid = timingSafeEqual(Buffer.from(signature), Buffer.from(expected))
+    const expires = Number(payload?.split(":")[1])
+    return valid && Number.isSafeInteger(expires) && expires > Math.floor(Date.now() / 1000)
+  } catch {
+    return false
+  }
+}
+
+const cookieOptions = { httpOnly: true, sameSite: "lax" as const, secure: true, path: "/" }
 
 export async function createSession() {
   const store = await cookies()
-  store.set(COOKIE_NAME, VALID_TOKEN, {
-    httpOnly: true,
-    // v0 프리뷰는 iframe(cross-site) 환경이라 SameSite=None + Secure 여야
-    // 로그인 이후 Server Action(POST) 요청에도 쿠키가 함께 전송된다.
-    sameSite: "none",
-    secure: true,
-    path: "/",
-    maxAge: 60 * 60 * 24 * 30, // 30일
-  })
+  store.set(COOKIE_NAME, createToken(), { ...cookieOptions, maxAge: SESSION_TTL })
 }
 
 export async function destroySession() {
   const store = await cookies()
-  // sameSite=none + secure 로 만든 쿠키는 삭제 시에도 동일 속성으로
-  // 즉시 만료시켜야 cross-site(iframe) 환경에서 브라우저가 실제로 지운다.
-  store.set(COOKIE_NAME, "", {
-    httpOnly: true,
-    sameSite: "none",
-    secure: true,
-    path: "/",
-    maxAge: 0,
-  })
+  store.set(COOKIE_NAME, "", { ...cookieOptions, maxAge: 0 })
 }
 
 export async function isAuthenticated(): Promise<boolean> {
   const store = await cookies()
-  return store.get(COOKIE_NAME)?.value === VALID_TOKEN
-}
-
-export function isAdminConfigured(): boolean {
-  return true
+  return isAdminConfigured() && validToken(store.get(COOKIE_NAME)?.value)
 }

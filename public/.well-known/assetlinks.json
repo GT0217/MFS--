@@ -2,7 +2,7 @@
   "relation": ["delegate_permission/common.handle_all_urls"],
   "target": {
     "namespace": "android_app",
-    "package_name": "app.vercel.v0_lozm6hg94_captinkkt8_3828s_projects.twa",
-    "sha256_cert_fingerprints": ["55:5A:84:C5:11:CA:A8:6F:85:D3:4F:B3:D2:9E:62:ED:EF:4C:83:BD:96:FD:2D:17:3B:28:68:0B:1E:C7:C9:CE"]
+    "package_name": "kr.mfsclub.app",
+    "sha256_cert_fingerprints": ["86:F2:18:22:43:28:C3:2F:1F:37:68:4C:2D:8A:91:D7:D5:A7:9C:FD:73:C3:D6:AE:EB:67:5E:CD:8B:25:4F:C9"]
   }
 }]

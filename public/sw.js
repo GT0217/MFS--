@@ -1,52 +1,57 @@
-const CACHE = "mfs-v2"
+const CACHE = "mfs-v3"
 const STATIC = [
-  "/",
-  "/ranking",
-  "/insights",
-  "/news",
-  "/recommend",
+  "/offline.html",
   "/manifest.json",
   "/icon-192.png",
   "/icon-512.png",
   "/icon-maskable-512.png",
 ]
 
-self.addEventListener("install", (e) => {
-  self.skipWaiting()
-  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(STATIC).catch(() => {})))
+self.addEventListener("install", (event) => {
+  event.waitUntil((async () => {
+    const cache = await caches.open(CACHE)
+    const results = await Promise.allSettled(STATIC.map((asset) => cache.add(asset)))
+    const failed = results.filter((result) => result.status === "rejected")
+    if (failed.length && self.registration?.active) console.warn("[MFS SW] static cache misses:", failed.length)
+    await self.skipWaiting()
+  })())
 })
 
-self.addEventListener("activate", (e) => {
-  e.waitUntil(
-    caches.keys().then((keys) =>
-      Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k)))
-    )
-  )
-  self.clients.claim()
+self.addEventListener("activate", (event) => {
+  event.waitUntil((async () => {
+    const keys = await caches.keys()
+    await Promise.all(keys.filter((key) => key !== CACHE).map((key) => caches.delete(key)))
+    await self.clients.claim()
+  })())
 })
 
-self.addEventListener("fetch", (e) => {
-  if (e.request.method !== "GET") return
-  const url = new URL(e.request.url)
-  // API, admin 요청은 네트워크 우선
-  if (url.pathname.startsWith("/api") || url.pathname.startsWith("/admin")) return
-  // 문서 이동은 네트워크 우선, 오프라인이면 캐시된 경로로 대체
-  if (e.request.mode === "navigate") {
-    e.respondWith(
-      fetch(e.request).catch(() => caches.match(e.request).then((cached) => cached || caches.match("/")))
-    )
+function cacheable(request, url) {
+  return request.method === "GET" && url.origin === self.location.origin &&
+    !url.pathname.startsWith("/api") && !url.pathname.startsWith("/admin") &&
+    !url.pathname.startsWith("/_next/data") && !url.searchParams.has("_rsc") &&
+    !url.searchParams.has("__nextDefaultLocale")
+}
+
+self.addEventListener("fetch", (event) => {
+  const url = new URL(event.request.url)
+  if (!cacheable(event.request, url)) return
+
+  if (event.request.mode === "navigate") {
+    event.respondWith(fetch(event.request).catch(() => caches.match("/offline.html")))
     return
   }
 
-  e.respondWith(
-    fetch(e.request)
-      .then((res) => {
-        if (res.ok && url.origin === self.location.origin) {
-          const clone = res.clone()
-          caches.open(CACHE).then((c) => c.put(e.request, clone))
-        }
-        return res
-      })
-      .catch(() => caches.match(e.request))
-  )
+  event.respondWith((async () => {
+    const cached = await caches.match(event.request)
+    try {
+      const response = await fetch(event.request)
+      if (response.ok && response.type === "basic") {
+        const cache = await caches.open(CACHE)
+        await cache.put(event.request, response.clone())
+      }
+      return response
+    } catch {
+      return cached || Response.error()
+    }
+  })())
 })
