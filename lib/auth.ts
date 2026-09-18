@@ -3,10 +3,16 @@ import { cookies } from "next/headers"
 
 const COOKIE_NAME = "mfs_admin"
 const SESSION_TTL = 60 * 60 * 24 * 2
-const sessionSecret = () => process.env.ADMIN_SESSION_SECRET
 
-export const ADMIN_ID = process.env.ADMIN_ID ?? ""
-export const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD ?? ""
+// 배포 환경변수가 있으면 우선 사용하고, 미설정 환경에서도 동일한 계정으로 로그인할 수 있습니다.
+const DEFAULT_ADMIN_ID = "MFS"
+const DEFAULT_ADMIN_PASSWORD = "tjrltnrytnsla!"
+const DEFAULT_SESSION_SECRET = "mfs-admin-session-secret-2025"
+
+const sessionSecret = () => process.env.ADMIN_SESSION_SECRET || DEFAULT_SESSION_SECRET
+
+export const ADMIN_ID = process.env.ADMIN_ID || DEFAULT_ADMIN_ID
+export const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || DEFAULT_ADMIN_PASSWORD
 
 export function isAdminConfigured(): boolean {
   return Boolean(ADMIN_ID && ADMIN_PASSWORD && sessionSecret())
@@ -40,7 +46,13 @@ function validToken(token: string | undefined): boolean {
   }
 }
 
-const cookieOptions = { httpOnly: true, sameSite: "lax" as const, secure: true, path: "/" }
+const cookieOptions = {
+  httpOnly: true,
+  sameSite: "lax" as const,
+  // HTTPS 배포에서는 Secure, localhost에서는 HTTP 쿠키를 허용합니다.
+  secure: process.env.NODE_ENV === "production",
+  path: "/",
+}
 
 export async function createSession() {
   const store = await cookies()
