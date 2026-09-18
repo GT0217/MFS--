@@ -56,3 +56,10 @@ export async function isAuthenticated(): Promise<boolean> {
   const store = await cookies()
   return isAdminConfigured() && validToken(store.get(COOKIE_NAME)?.value)
 }
+
+/** Server Actions must call this before any database or Blob mutation. */
+export async function requireAdmin(): Promise<void> {
+  if (!(await isAuthenticated())) {
+    throw new Error("Unauthorized")
+  }
+}
