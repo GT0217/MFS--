@@ -38,13 +38,7 @@ export default async function AdminPage() {
               <p className="mb-5 text-sm text-muted-foreground">
                 앱 정보, 점수, 사진, 인사이트를 관리하려면 로그인하세요.
               </p>
-              {isAdminConfigured() ? (
-                <LoginForm />
-              ) : (
-                <p className="rounded-xl bg-muted p-4 text-sm leading-6 text-muted-foreground">
-                  관리자 인증 환경변수가 설정되지 않았습니다. 배포 환경에 ADMIN_ID, ADMIN_PASSWORD, ADMIN_SESSION_SECRET을 설정해 주세요.
-                </p>
-              )}
+              <LoginForm />
             </div>
           </div>
         )}

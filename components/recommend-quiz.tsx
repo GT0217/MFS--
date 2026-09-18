@@ -69,15 +69,11 @@ function ShareButton({ appName, matchPct }: { appName: string; matchPct: number 
     const text = `MFS가 나에게 추천한 금융앱은 "${appName}"! 매칭도 ${matchPct}%\n서경대 MFS 연구회 앱 추천 받아보기: ${window.location.href}`
     if (navigator.share) {
       navigator.share({ title: "MFS AI 추천 결과", text }).catch(() => null)
-    } else if (navigator.clipboard?.writeText) {
+    } else {
       navigator.clipboard.writeText(text).then(() => {
         setCopied(true)
         setTimeout(() => setCopied(false), 2000)
-      }).catch(() => {
-        window.alert("링크를 복사하지 못했습니다. 브라우저 권한을 확인해 주세요.")
       })
-    } else {
-      window.alert("이 브라우저에서는 공유 기능을 사용할 수 없습니다.")
     }
   }
 
@@ -130,16 +126,6 @@ export function RecommendQuiz({ apps }: { apps: AppWithScore[] }) {
     setDone(false)
   }
 
-  if (!apps.length) {
-    return (
-      <div className="flex flex-col items-center rounded-3xl bg-card p-8 text-center shadow-md">
-        <span className="text-sm font-semibold text-foreground">추천 데이터를 불러오지 못했습니다.</span>
-        <p className="mt-2 text-xs leading-5 text-muted-foreground">잠시 후 다시 시도해 주세요. 데이터가 준비되면 설문을 시작할 수 있습니다.</p>
-        <button type="button" onClick={() => window.location.reload()} className="mt-5 rounded-xl bg-primary px-5 py-3 text-sm font-bold text-primary-foreground">다시 시도</button>
-      </div>
-    )
-  }
-
   if (!started) {
     return (
       <div className="flex flex-col items-center rounded-3xl bg-card p-8 text-center shadow-md">
@@ -174,9 +160,6 @@ export function RecommendQuiz({ apps }: { apps: AppWithScore[] }) {
       .sort((a, b) => b.match - a.match)
 
     const best = scored[0]
-    if (!best) {
-      return <p className="rounded-2xl bg-card p-6 text-sm text-muted-foreground">추천 데이터를 계산할 수 없습니다. 다시 시도해 주세요.</p>
-    }
     const runnerUps = scored.slice(1, 3)
     const matchPct = Math.round((best.match / 10) * 100)
 
