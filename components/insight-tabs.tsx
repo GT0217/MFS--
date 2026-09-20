@@ -234,7 +234,12 @@ export function InsightTabs({
     btn?.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "nearest" })
   }, [tab])
 
-  const filtered = insights.filter((i) => i.category === tab)
+  const filtered = insights
+    .filter((i) => i.category === tab)
+    .sort((a, b) => {
+      const dateDiff = new Date(b.published_on || 0).getTime() - new Date(a.published_on || 0).getTime()
+      return dateDiff || b.id - a.id
+    })
   const selectedInsight = selectedIndex !== null ? filtered[selectedIndex] : null
 
   const handleNext = () => {
