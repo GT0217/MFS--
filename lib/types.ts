@@ -65,6 +65,7 @@ export type News = {
   link_url: string | null
   image_url: string | null
   author: string | null
+  published_on: string | null
   category: string
   sort_order: number
   created_at: string
