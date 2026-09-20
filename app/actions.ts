@@ -289,6 +289,7 @@ export async function saveNews(_prev: SaveState, formData: FormData): Promise<Sa
   const content = str(formData.get("content")) || null
   const linkUrl = str(formData.get("link_url")) || null
   const author = str(formData.get("author")) || null
+  const publishedOn = str(formData.get("published_on")) || null
   const category = str(formData.get("category")) || "금융 뉴스"
   const sortOrder = num(formData.get("sort_order"))
 
@@ -301,25 +302,25 @@ export async function saveNews(_prev: SaveState, formData: FormData): Promise<Sa
       await getPool().query(
         `UPDATE news
          SET title=$1, summary=$2, content=$3, link_url=$4, author=$5,
-             category=$6, sort_order=$7, image_url=$8
-         WHERE id=$9`,
-        [title, summary, content, linkUrl, author, category, sortOrder, uploaded, id],
+             published_on=$6, category=$7, sort_order=$8, image_url=$9
+         WHERE id=$10`,
+        [title, summary, content, linkUrl, author, publishedOn, category, sortOrder, uploaded, id],
       )
     } else {
       await getPool().query(
         `UPDATE news
          SET title=$1, summary=$2, content=$3, link_url=$4, author=$5,
-             category=$6, sort_order=$7
-         WHERE id=$8`,
-        [title, summary, content, linkUrl, author, category, sortOrder, id],
+             published_on=$6, category=$7, sort_order=$8
+         WHERE id=$9`,
+        [title, summary, content, linkUrl, author, publishedOn, category, sortOrder, id],
       )
     }
   } else {
     await getPool().query(
       `INSERT INTO news
-         (title, summary, content, link_url, author, category, sort_order, image_url)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`,
-      [title, summary, content, linkUrl, author, category, sortOrder, uploaded],
+         (title, summary, content, link_url, author, published_on, category, sort_order, image_url)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
+      [title, summary, content, linkUrl, author, publishedOn, category, sortOrder, uploaded],
     )
   }
   revalidateAll()

@@ -95,7 +95,7 @@ export async function getInsightCategories(): Promise<InsightCategoryRow[]> {
 export async function getNews(): Promise<News[]> {
   try {
     const { rows } = await getPool().query<News>(
-      "SELECT * FROM news ORDER BY sort_order ASC, created_at DESC",
+      "SELECT * FROM news ORDER BY published_on DESC NULLS LAST, created_at DESC, id DESC",
     )
     return rows
   } catch {

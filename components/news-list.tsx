@@ -173,7 +173,7 @@ export function NewsList({ newsList }: { newsList: News[] }) {
     ? [...newsList]
     : newsList.filter((n) => n.category === activeTab)
   ).sort((a, b) => {
-    const dateDiff = new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime()
+    const dateDiff = new Date(b.published_on || b.created_at || 0).getTime() - new Date(a.published_on || a.created_at || 0).getTime()
     return dateDiff || b.id - a.id
   })
 

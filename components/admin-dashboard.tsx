@@ -524,10 +524,18 @@ function NewsForm({ news }: { news?: News }) {
         <Field text="요약 (목록 카드에 표시)">
           <input name="summary" defaultValue={news?.summary ?? ""} className={input} />
         </Field>
-        <Field text="작성자">
-          <input name="author" defaultValue={news?.author ?? ""} className={input} />
-        </Field>
-        <Field text="외부 원문 링크 (선택)">
+  <Field text="작성자">
+  <input name="author" defaultValue={news?.author ?? ""} className={input} />
+  </Field>
+  <Field text="게시일">
+  <input
+  name="published_on"
+  type="date"
+  defaultValue={news?.published_on ? String(news.published_on).slice(0, 10) : ""}
+  className={input}
+  />
+  </Field>
+  <Field text="외부 원문 링크 (선택)">
           <input
             name="link_url"
             type="url"
@@ -599,7 +607,7 @@ function CategoryManager({ categories }: { categories: InsightCategoryRow[] }) {
       {/* 기존 카테고리 목록 */}
       <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
         <div className="px-5 py-4">
-          <p className="font-bold">카테고리 목록</p>
+          <p className="font-bold">��테고리 목록</p>
           <p className="text-xs text-muted-foreground">인사이트 탭과 글쓰기 폼에 동일하게 반영됩니다.</p>
         </div>
         <div className="divide-y divide-border border-t border-border">
