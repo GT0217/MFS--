@@ -169,9 +169,13 @@ export function NewsList({ newsList }: { newsList: News[] }) {
   const [activeTab, setActiveTab] = useState<string>("전체")
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null)
 
-  const filtered = activeTab === "전체"
-    ? newsList
+  const filtered = (activeTab === "전체"
+    ? [...newsList]
     : newsList.filter((n) => n.category === activeTab)
+  ).sort((a, b) => {
+    const dateDiff = new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime()
+    return dateDiff || b.id - a.id
+  })
 
   const handleClose = () => setSelectedIndex(null)
 
