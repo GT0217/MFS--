@@ -62,6 +62,25 @@ const FIELD_MAP: Record<keyof Weight, keyof AppWithScore> = {
   security: "score_security",
 }
 
+const EXAMPLE_PROMPTS = [
+  "신속한 게 좋아요",
+  "보안성이 높은 게 좋아요",
+  "자산을 한눈에 보고 싶어요",
+  "처음 써도 쉬운 앱이면 좋겠어요",
+]
+
+function weightsFromMessage(message: string): Weight {
+  const text = message.toLowerCase()
+  const weight: Weight = {}
+  const add = (key: keyof Weight, value: number) => { weight[key] = (weight[key] ?? 0) + value }
+  if (/빠르|신속|송금|결제|속도/.test(text)) add("speed", 3)
+  if (/편하|간편|쉬운|쉽게|단순|처음|초보/.test(text)) { add("convenience", 2); add("readability", 2) }
+  if (/보안|안전|안심|신뢰/.test(text)) add("security", 3)
+  if (/상품|기능|다양|투자|저축|적금/.test(text)) add("variety", 3)
+  if (/한눈에|보기|화면|읽|자산 관리/.test(text)) add("readability", 3)
+  return Object.keys(weight).length ? weight : { convenience: 2, readability: 1 }
+}
+
 function ShareButton({ appName, matchPct }: { appName: string; matchPct: number }) {
   const [copied, setCopied] = useState(false)
 
@@ -100,7 +119,7 @@ function ShareButton({ appName, matchPct }: { appName: string; matchPct: number 
 
 export function RecommendQuiz({ apps }: { apps: AppWithScore[] }) {
   const [started, setStarted] = useState(false)
-  const [step, setStep] = useState(0)
+  const [message, setMessage] = useState("")
   const [weights, setWeights] = useState<Record<string, number>>({})
   const [answers, setAnswers] = useState<string[]>([])
   const [aiExplanation, setAiExplanation] = useState("")
@@ -129,24 +148,20 @@ export function RecommendQuiz({ apps }: { apps: AppWithScore[] }) {
     }
   }
 
-  function choose(weight: Weight, answer: string) {
-    const nextAnswers = [...answers, answer]
+  function submitMessage(nextMessage = message) {
+    const trimmed = nextMessage.trim()
+    if (!trimmed) return
+    const nextAnswers = [...answers, trimmed]
     setAnswers(nextAnswers)
-    setWeights((prev) => {
-      const next = { ...prev }
-      for (const [k, v] of Object.entries(weight)) next[k] = (next[k] ?? 0) + (v ?? 0)
-      return next
-    })
-    if (step + 1 < QUESTIONS.length) setStep(step + 1)
-    else {
-      setDone(true)
-      void requestAiExplanation(nextAnswers)
-    }
+    setMessage("")
+    setWeights(weightsFromMessage(trimmed))
+    setDone(true)
+    void requestAiExplanation(nextAnswers)
   }
 
   function reset() {
     setStarted(false)
-    setStep(0)
+    setMessage("")
     setWeights({})
     setAnswers([])
     setAiExplanation("")
@@ -270,50 +285,56 @@ export function RecommendQuiz({ apps }: { apps: AppWithScore[] }) {
     )
   }
 
-  const question = QUESTIONS[step]
-  const progress = ((step + 1) / QUESTIONS.length) * 100
-
   return (
-    <div>
-      {/* Progress */}
-      <div className="mb-5">
-        <div className="mb-2 flex items-center justify-between">
-          <span className="text-xs font-semibold text-muted-foreground">
-            질문 {step + 1} / {QUESTIONS.length}
-          </span>
-          <span className="text-xs font-semibold text-primary">{Math.round(progress)}%</span>
-        </div>
-        <div className="flex gap-1.5">
-          {QUESTIONS.map((_, i) => (
-            <div
-              key={i}
-              className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted"
-            >
-              <div
-                className="h-full rounded-full bg-primary transition-all duration-500"
-                style={{ width: i < step + 1 ? "100%" : i === step ? "50%" : "0%" }}
-              />
-            </div>
-          ))}
+    <div className="rounded-3xl bg-card p-5 shadow-md">
+      <div className="flex items-start gap-3">
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+          <Sparkles className="h-5 w-5" aria-hidden="true" />
+        </span>
+        <div>
+          <p className="text-sm font-bold">어떤 금융앱을 찾고 있나요?</p>
+          <p className="mt-1 text-xs leading-5 text-muted-foreground">원하는 조건을 편하게 말해주시면 MFS AI가 앱을 비교해드릴게요.</p>
         </div>
       </div>
 
-      <h2 className="text-balance text-lg font-bold leading-snug">{question.q}</h2>
-
-      <ul className="mt-5 flex flex-col gap-3">
-        {question.options.map((opt) => (
-          <li key={opt.label}>
-            <button
-              type="button"
-              onClick={() => choose(opt.weight, opt.label)}
-              className="flex w-full items-center justify-between rounded-3xl bg-card p-4 text-left text-sm font-semibold shadow-sm transition-colors active:bg-muted active:scale-[0.98] dark:bg-zinc-800"
-            >
-              {opt.label}
-              <ChevronRight className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
-            </button>
-          </li>
+      <div className="mt-5 flex flex-wrap gap-2" aria-label="예시 답변">
+        {EXAMPLE_PROMPTS.map((prompt) => (
+          <button
+            key={prompt}
+            type="button"
+            onClick={() => setMessage((current) => current ? `${current}, ${prompt}` : prompt)}
+            className="rounded-full border border-border bg-background px-3 py-2 text-xs font-semibold text-muted-foreground transition-colors hover:border-primary/40 hover:text-primary"
+          >
+            {prompt}
+          </button>
         ))}
-      </ul>
+      </div>
+
+      <form
+        className="mt-4"
+        onSubmit={(event) => {
+          event.preventDefault()
+          submitMessage()
+        }}
+      >
+        <label htmlFor="recommendation-message" className="sr-only">원하는 금융앱 조건</label>
+        <textarea
+          id="recommendation-message"
+          value={message}
+          onChange={(event) => setMessage(event.target.value)}
+          placeholder="예: 매일 송금해서 빠르고 보안성 높은 앱이 좋아요"
+          rows={3}
+          className="w-full resize-none rounded-2xl border border-border bg-background px-4 py-3 text-sm leading-6 text-foreground outline-none transition-colors placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/15"
+        />
+        <button
+          type="submit"
+          disabled={!message.trim()}
+          className="mt-3 flex w-full items-center justify-center gap-2 rounded-2xl bg-primary py-3.5 text-sm font-bold text-primary-foreground transition-opacity disabled:cursor-not-allowed disabled:opacity-40"
+        >
+          AI에게 추천받기
+          <ChevronRight className="h-4 w-4" aria-hidden="true" />
+        </button>
+      </form>
     </div>
   )
 }
