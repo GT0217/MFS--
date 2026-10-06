@@ -104,21 +104,26 @@ export function RecommendQuiz({ apps }: { apps: AppWithScore[] }) {
   const [weights, setWeights] = useState<Record<string, number>>({})
   const [answers, setAnswers] = useState<string[]>([])
   const [aiExplanation, setAiExplanation] = useState("")
+  const [aiError, setAiError] = useState("")
   const [aiLoading, setAiLoading] = useState(false)
   const [done, setDone] = useState(false)
 
   async function requestAiExplanation(nextAnswers: string[]) {
     setAiLoading(true)
+    setAiError("")
     try {
       const response = await fetch("/api/recommend", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ answers: nextAnswers, apps }),
       })
-      const data = await response.json()
-      if (response.ok && typeof data.explanation === "string") setAiExplanation(data.explanation)
-    } catch {
-      // 점수 기반 추천은 AI 설명을 불러오지 못해도 그대로 사용할 수 있습니다.
+      const data = await response.json().catch(() => ({}))
+      if (!response.ok || typeof data.explanation !== "string" || !data.explanation.trim()) {
+        throw new Error(typeof data.error === "string" ? data.error : "AI 응답을 받을 수 없습니다.")
+      }
+      setAiExplanation(data.explanation.trim())
+    } catch (error) {
+      setAiError(error instanceof Error ? error.message : "AI 추천 설명을 불러오지 못했습니다.")
     } finally {
       setAiLoading(false)
     }
@@ -145,6 +150,7 @@ export function RecommendQuiz({ apps }: { apps: AppWithScore[] }) {
     setWeights({})
     setAnswers([])
     setAiExplanation("")
+    setAiError("")
     setAiLoading(false)
     setDone(false)
   }
@@ -215,11 +221,16 @@ export function RecommendQuiz({ apps }: { apps: AppWithScore[] }) {
         </div>
 
         <div className="mt-5 rounded-2xl border border-primary/20 bg-primary/5 p-4">
-          <p className="text-xs font-bold text-primary">AI가 읽어주는 추천 이유</p>
+          <p className="text-xs font-bold text-primary">MFS AI 분석</p>
           {aiLoading ? (
-            <p className="mt-2 text-sm leading-6 text-muted-foreground">응답을 바탕으로 추천 이유를 작성하고 있어요...</p>
+            <p className="mt-2 text-sm leading-6 text-muted-foreground">답변과 앱 특징을 비교해 개인화된 분석을 작성하고 있어요...</p>
+          ) : aiError ? (
+            <div className="mt-2">
+              <p className="text-sm leading-6 text-destructive">{aiError}</p>
+              <button type="button" onClick={() => void requestAiExplanation(answers)} className="mt-3 rounded-lg bg-card px-3 py-2 text-xs font-bold text-foreground ring-1 ring-border">AI 분석 다시 시도</button>
+            </div>
           ) : (
-            <p className="mt-2 text-sm leading-6 text-foreground">{aiExplanation || "설문 결과를 바탕으로 추천 이유를 정리했습니다."}</p>
+            <p className="mt-2 whitespace-pre-line text-sm leading-6 text-foreground">{aiExplanation}</p>
           )}
         </div>
 
