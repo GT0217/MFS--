@@ -69,6 +69,11 @@ const EXAMPLE_PROMPTS = [
   "처음 써도 쉬운 앱이면 좋겠어요",
 ]
 
+const FOLLOW_UP_PROMPTS = [
+  ["주로 송금과 결제를 해요", "투자 상품도 다양했으면 해요", "수수료가 낮은 게 중요해요"],
+  ["화면이 한눈에 보이면 좋겠어요", "안전하게 관리하고 싶어요", "고객센터가 잘 되어 있으면 해요"],
+]
+
 function weightsFromMessage(message: string): Weight {
   const text = message.toLowerCase()
   const weight: Weight = {}
@@ -154,9 +159,19 @@ export function RecommendQuiz({ apps }: { apps: AppWithScore[] }) {
     const nextAnswers = [...answers, trimmed]
     setAnswers(nextAnswers)
     setMessage("")
-    setWeights(weightsFromMessage(trimmed))
-    setDone(true)
-    void requestAiExplanation(nextAnswers)
+    setWeights((current) => {
+      const next = { ...current }
+      for (const [key, value] of Object.entries(weightsFromMessage(trimmed))) {
+        next[key] = (next[key] ?? 0) + value
+      }
+      return next
+    })
+
+    // 한 번의 답변으로 결론내리지 않고, 최소 세 가지 기준을 모은 뒤 분석합니다.
+    if (nextAnswers.length >= 3) {
+      setDone(true)
+      void requestAiExplanation(nextAnswers)
+    }
   }
 
   function reset() {
@@ -297,8 +312,19 @@ export function RecommendQuiz({ apps }: { apps: AppWithScore[] }) {
         </div>
       </div>
 
+      {answers.length > 0 && (
+        <div className="mt-5 flex flex-col gap-2" aria-label="내 답변">
+          {answers.map((answer, index) => (
+            <div key={`${answer}-${index}`} className="self-end rounded-2xl rounded-tr-md bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground">
+              {answer}
+            </div>
+          ))}
+          <p className="text-xs text-muted-foreground">좋아요. {3 - answers.length}가지만 더 알려주시면 여러 조건을 함께 비교할게요.</p>
+        </div>
+      )}
+
       <div className="mt-5 flex flex-wrap gap-2" aria-label="예시 답변">
-        {EXAMPLE_PROMPTS.map((prompt) => (
+        {(answers.length === 0 ? EXAMPLE_PROMPTS : FOLLOW_UP_PROMPTS[Math.min(answers.length - 1, FOLLOW_UP_PROMPTS.length - 1)]).map((prompt) => (
           <button
             key={prompt}
             type="button"
@@ -331,7 +357,7 @@ export function RecommendQuiz({ apps }: { apps: AppWithScore[] }) {
           disabled={!message.trim()}
           className="mt-3 flex w-full items-center justify-center gap-2 rounded-2xl bg-primary py-3.5 text-sm font-bold text-primary-foreground transition-opacity disabled:cursor-not-allowed disabled:opacity-40"
         >
-          AI에게 추천받기
+          {answers.length === 0 ? "첫 번째 답변 보내기" : answers.length < 2 ? "다음 답변 보내기" : "AI에게 추천받기"}
           <ChevronRight className="h-4 w-4" aria-hidden="true" />
         </button>
       </form>
