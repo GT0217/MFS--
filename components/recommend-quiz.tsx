@@ -102,20 +102,40 @@ export function RecommendQuiz({ apps }: { apps: AppWithScore[] }) {
   const [started, setStarted] = useState(false)
   const [step, setStep] = useState(0)
   const [weights, setWeights] = useState<Record<string, number>>({})
+  const [answers, setAnswers] = useState<string[]>([])
+  const [aiExplanation, setAiExplanation] = useState("")
+  const [aiLoading, setAiLoading] = useState(false)
   const [done, setDone] = useState(false)
 
-  function choose(weight: Weight) {
+  async function requestAiExplanation(nextAnswers: string[]) {
+    setAiLoading(true)
+    try {
+      const response = await fetch("/api/recommend", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ answers: nextAnswers, apps }),
+      })
+      const data = await response.json()
+      if (response.ok && typeof data.explanation === "string") setAiExplanation(data.explanation)
+    } catch {
+      // 점수 기반 추천은 AI 설명을 불러오지 못해도 그대로 사용할 수 있습니다.
+    } finally {
+      setAiLoading(false)
+    }
+  }
+
+  function choose(weight: Weight, answer: string) {
+    const nextAnswers = [...answers, answer]
+    setAnswers(nextAnswers)
     setWeights((prev) => {
       const next = { ...prev }
-      for (const [k, v] of Object.entries(weight)) {
-        next[k] = (next[k] ?? 0) + (v ?? 0)
-      }
+      for (const [k, v] of Object.entries(weight)) next[k] = (next[k] ?? 0) + (v ?? 0)
       return next
     })
-    if (step + 1 < QUESTIONS.length) {
-      setStep(step + 1)
-    } else {
+    if (step + 1 < QUESTIONS.length) setStep(step + 1)
+    else {
       setDone(true)
+      void requestAiExplanation(nextAnswers)
     }
   }
 
@@ -123,6 +143,9 @@ export function RecommendQuiz({ apps }: { apps: AppWithScore[] }) {
     setStarted(false)
     setStep(0)
     setWeights({})
+    setAnswers([])
+    setAiExplanation("")
+    setAiLoading(false)
     setDone(false)
   }
 
@@ -189,6 +212,15 @@ export function RecommendQuiz({ apps }: { apps: AppWithScore[] }) {
               <ChevronRight className="h-4 w-4" aria-hidden="true" />
             </Link>
           </div>
+        </div>
+
+        <div className="mt-5 rounded-2xl border border-primary/20 bg-primary/5 p-4">
+          <p className="text-xs font-bold text-primary">AI가 읽어주는 추천 이유</p>
+          {aiLoading ? (
+            <p className="mt-2 text-sm leading-6 text-muted-foreground">응답을 바탕으로 추천 이유를 작성하고 있어요...</p>
+          ) : (
+            <p className="mt-2 text-sm leading-6 text-foreground">{aiExplanation || "설문 결과를 바탕으로 추천 이유를 정리했습니다."}</p>
+          )}
         </div>
 
         <h3 className="mt-6 text-sm font-bold text-muted-foreground">함께 추천하는 앱</h3>
@@ -262,7 +294,7 @@ export function RecommendQuiz({ apps }: { apps: AppWithScore[] }) {
           <li key={opt.label}>
             <button
               type="button"
-              onClick={() => choose(opt.weight)}
+              onClick={() => choose(opt.weight, opt.label)}
               className="flex w-full items-center justify-between rounded-3xl bg-card p-4 text-left text-sm font-semibold shadow-sm transition-colors active:bg-muted active:scale-[0.98] dark:bg-zinc-800"
             >
               {opt.label}
